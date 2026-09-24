@@ -27,13 +27,18 @@ function switchView(view) {
   setStatus(view === 'preview' ? '预览模式（只读）' : '编辑模式', 'ok');
 }
 
-/* ================= 原地载入新工单（保持 reactive 引用稳定） ================= */
+/* ================= 原地载入新工单（保持引用稳定，避免编辑态绑定失效） ================= */
 function loadOrderInto(obj) {
   const n = normalizeOrder(obj);
-  Object.keys(currentOrder).forEach((k) => delete currentOrder[k]);
-  Object.assign(currentOrder, n);
+  // 顶层标量字段（orderNo、meta 等）整体替换
+  ['orderNo', 'meta'].forEach((k) => { currentOrder[k] = n[k]; });
+  // fields / cks：保留原对象引用（EditForm 的 reactive 绑定依赖它），原地清空重填
   if (!(currentOrder.fields && typeof currentOrder.fields === 'object')) currentOrder.fields = {};
   if (!(currentOrder.cks && typeof currentOrder.cks === 'object')) currentOrder.cks = {};
+  Object.keys(currentOrder.fields).forEach((k) => { delete currentOrder.fields[k]; });
+  Object.keys(currentOrder.cks).forEach((k) => { delete currentOrder.cks[k]; });
+  Object.assign(currentOrder.fields, n.fields || {});
+  Object.assign(currentOrder.cks, n.cks || {});
 }
 
 /* ================= 状态栏 ================= */
