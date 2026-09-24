@@ -22,7 +22,7 @@ html, body {
   margin: 0 auto;
   background: #fff;
   border: 1px solid #000;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.4;
   color: #000;
   font-family: "SimSun", "宋体", "Microsoft YaHei", serif;
@@ -44,13 +44,13 @@ html, body {
 .form-doc table.bordered > tbody > tr > td,
 .form-doc table.bordered > tbody > tr > th {
   border: 1px solid #000;
-  padding: 4px 6px; text-align: center; vertical-align: middle; font-size: 12px;
-  height: 30px; overflow: hidden;
+  padding: 0 3px; text-align: center; vertical-align: middle; font-size: 14px;
+  height: 24px; overflow: hidden;
 }
 .form-doc .left { text-align: left !important; }
 .form-doc .label { background: #fff; font-weight: normal; }
-.form-doc .size-row td { height: 13px; line-height: 1; }
-.form-doc table.inner td { height: 28px; }
+.form-doc .size-row td { height: 11px; line-height: 1; }
+.form-doc table.inner td { height: 24px; }
 .form-doc [contenteditable] {
   display: inline-block; max-width: 100%;
   word-break: break-all; overflow-wrap: break-word; overflow: hidden;
@@ -69,18 +69,18 @@ html, body {
   white-space: nowrap; text-overflow: ellipsis;
 }
 .top-info {
-  display: flex; border-bottom: 1px solid #000; font-size: 12px; line-height: 28px;
+  display: flex; border-bottom: 1px solid #000; font-size: 14px; line-height: 28px;
 }
 .top-info > div { padding: 0 8px; white-space: nowrap; }
 .top-info .right { text-align: right; flex: 1; }
 .bottom-sign {
-  display: flex; border-top: 1px solid #000; margin-top: -1px; font-size: 12px; line-height: 28px;
+  display: flex; border-top: 1px solid #000; margin-top: -1px; font-size: 14px; line-height: 24px;
 }
 .bottom-sign > div { padding: 0 8px; }
 .side-tag {
   width: 18px; flex-shrink: 0; align-self: center;
   display: flex; flex-direction: column; justify-content: space-around;
-  align-items: center; font-size: 12px; padding: 30px 2px; gap: 10px;
+  align-items: center; font-size: 14px; padding: 30px 2px; gap: 10px;
 }
 .side-tag > div { writing-mode: vertical-rl; text-orientation: upright; letter-spacing: 2px; }
 
@@ -94,12 +94,23 @@ html, body {
   text-align: center; font-size: 10px; font-weight: bold;
 }
 .v-text { writing-mode: vertical-rl; text-orientation: upright; letter-spacing: 2px; padding: 4px 2px; }
+/* 装订"其它"后的下划线（显示其它内容） */
+.pv-txt.underline {
+  display: inline-block;
+  min-width: 48px;
+  border-bottom: 1px solid #000;
+  padding: 0 4px 0 1px;
+  line-height: 1.2;
+  vertical-align: baseline;
+}
 .rotate-90 {
   writing-mode: horizontal-tb; transform: rotate(90deg); transform-origin: center center;
-  white-space: nowrap; letter-spacing: 2px; font-size: 12px; display: inline-block; margin: 0 auto;
+  white-space: nowrap; letter-spacing: 2px; font-size: 14px; display: inline-block; margin: 0 auto;
 }
 .size-cell { white-space: nowrap; padding: 0 4px; line-height: 1; font-size: 10px; }
 .size-cell .ck { margin: 0 0 0 4px; width: 9px; height: 9px; }
+/* 装订格内勾选框：缩小左边距，让 散张/骑钉 更紧凑一行容纳 */
+.zhuangding .ck { margin: 0 2px 0 2px; }
 .size-cell .ck.on::after { line-height: 8px; font-size: 9px; }
 .size-merge { padding: 0 1px; line-height: 0.9; font-size: 9px; vertical-align: middle; }
 .size-merge .ck { width: 7px; height: 7px; margin: 0 0 0 2px; vertical-align: middle; }
