@@ -1,0 +1,19 @@
+# ---- 依赖与构建产物 ----
+node_modules/
+src/renderer/node_modules/
+src/renderer/dist/
+src-tauri/target/
+src-tauri/gen/
+
+# ---- 数据库（含真实业务数据，勿提交/外泄） ----
+*.sql
+
+# ---- 旧版备份 ----
+src/renderer_legacy/
+
+# ---- 临时文件 ----
+*.log
+.DS_Store
+Desktop.ini
+# ---- 工具安装包 ----
+.tools/

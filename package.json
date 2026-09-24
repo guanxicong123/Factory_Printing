@@ -1,0 +1,14 @@
+{
+  "name": "factory-printing-form",
+  "version": "0.1.0",
+  "description": "进发印刷印件工单客户端",
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build"
+  },
+  "author": "guanxc",
+  "license": "MIT",
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.11.5"
+  }
+}

@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>印刷印件工单 - 0022379</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "SimSun", "宋体", "Microsoft YaHei", serif;
+    background: #e6e6e6;
+    padding: 20px;
+    color: #000;
+    -webkit-font-smoothing: antialiased;
+  }
+  @page { size: A4; margin: 0; }
+  .page {
+    width: 210mm;
+    margin: 0 auto;
+    background: #fff;
+    border: 2px solid #000;
+    font-size: 12px;
+    line-height: 1.4;
+    display: flex;
+    padding-right: 10px;
+  }
+  .form-body {
+    flex: 1;
+    padding: 10px 12px 16px;
+    min-width: 0;
+  }
+  @media print {
+    body { background: #fff; padding: 0; }
+    .page { margin: 0 auto; }
+  }
+  .title-bar {
+    position: relative;
+    text-align: center;
+    margin: 6px 0 10px;
+    height: 40px;
+  }
+  .title-bar .title {
+    display: inline-block;
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 10px;
+    padding-left: 10px;
+    line-height: 40px;
+  }
+  .logo-j {
+    position: absolute;
+    left: 56%;
+    top: 4px;
+    width: 36px;
+    height: 30px;
+    border: 1.5px solid #d22;
+    border-radius: 50%;
+    background: #fff;
+    color: #d22;
+    font-style: italic;
+    font-weight: bold;
+    font-size: 22px;
+    line-height: 28px;
+    text-align: center;
+    transform: rotate(-5deg);
+  }
+  .red-circle {
+    position: absolute;
+    left: 90px;
+    top: 22px;
+    width: 50px;
+    height: 26px;
+    border: 1.5px solid red;
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  table.bordered > tbody > tr > td,
+  table.bordered > tbody > tr > th {
+    border: 1px solid #000;
+    padding: 4px 6px;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 12px;
+  }
+  .left { text-align: left !important; }
+  .label {
+    background: #fff;
+    font-weight: normal;
+  }
+  .ck {
+    display: inline-block;
+    width: 11px;
+    height: 11px;
+    border: 1px solid #000;
+    margin: 0 2px 0 6px;
+    vertical-align: middle;
+    position: relative;
+    background: #fff;
+  }
+  .ck.on::after {
+    content: "V";
+    position: absolute;
+    inset: 0;
+    line-height: 10px;
+    text-align: center;
+    font-size: 10px;
+    font-weight: bold;
+  }
+  .v-text {
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    letter-spacing: 2px;
+    padding: 4px 2px;
+  }
+  .rotate-90 {
+    writing-mode: horizontal-tb;
+    transform: rotate(90deg);
+    transform-origin: center center;
+    white-space: nowrap;
+    letter-spacing: 2px;
+    font-size: 12px;
+    display: inline-block;
+    margin: 0 auto;
+  }
+  .size-cell {
+    white-space: nowrap;
+    padding: 0 4px;
+    line-height: 1;
+    font-size: 10px;
+  }
+  .size-cell .ck {
+    margin: 0 0 0 4px;
+    width: 9px;
+    height: 9px;
+  }
+  .size-cell .ck.on::after {
+    line-height: 8px;
+    font-size: 9px;
+  }
+  .size-merge {
+    padding: 0 1px;
+    line-height: 0.9;
+    font-size: 9px;
+    vertical-align: middle;
+  }
+  .size-merge .ck {
+    width: 7px;
+    height: 7px;
+    margin: 0 0 0 2px;
+    vertical-align: middle;
+  }
+  .size-merge .ck.on::after {
+    line-height: 6px;
+    font-size: 7px;
+  }
+  .size-row { height: 13px; }
+  .inner { border: 0; }
+  .inner td { border: 1px solid #000; }
+  .gap-top { margin-top: -1px; }
+  .top-info {
+    display: flex;
+    border-bottom: 1px solid #000;
+    font-size: 12px;
+    line-height: 28px;
+  }
+  .top-info > div {
+    padding: 0 8px;
+    white-space: nowrap;
+  }
+  .top-info .right {
+    text-align: right;
+    flex: 1;
+  }
+  .bottom-sign {
+    display: flex;
+    border-top: 1px solid #000;
+    margin-top: -1px;
+    font-size: 12px;
+    line-height: 28px;
+  }
+  .bottom-sign > div {
+    padding: 0 8px;
+  }
+  .side-tag {
+    width: 26px;
+    flex-shrink: 0;
+    align-self: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+    font-size: 12px;
+    padding: 30px 4px;
+    gap: 14px;
+  }
+  .side-tag > div {
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    letter-spacing: 2px;
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <div class="form-body">
+
+  <!-- 顶部标题 -->
+  <div class="title-bar">
+    <span class="title">印 刷 印 件 工 单</span>
+  </div>
+
+  <!-- 顶部三段：开单日期 / 交货日期 / No -->
+  <div class="top-info">
+    <div style="width:30%;"><b>开单日期： 2026 年 9 月 18 日</b></div>
+    <div style="width:42%;"><b>交货日期： 2026 年 9 月 28 日</b></div>
+    <div class="right" style="width:28%;"><b style="font-size:17px;">No. 0022379</b></div>
+  </div>
+
+  <!-- 订印单位 / 合同号 -->
+  <table class="bordered gap-top">
+    <tr>
+      <td class="label" style="width:12%;">订印单位</td>
+      <td class="left" style="width:60%;">安徽可新材料</td>
+      <td class="label" style="width:12%;">合同号</td>
+      <td style="width:16%;"></td>
+    </tr>
+  </table>
+
+  <!-- 产品名称 + 规格 + 号码/由/联/页/本 + 订印数量（列宽与上方合同号对齐：12/15/15/15/15/12/5.33/5.33/5.34） -->
+  <table class="bordered gap-top">
+    <colgroup>
+      <col style="width:12%;">
+      <col style="width:15%;">
+      <col style="width:15%;">
+      <col style="width:15%;">
+      <col style="width:15%;">
+      <col style="width:12%;">
+      <col style="width:5.33%;">
+      <col style="width:5.33%;">
+      <col style="width:5.34%;">
+    </colgroup>
+    <tr>
+      <td class="label">产品名称</td>
+      <td class="left" colspan="4" style="padding:6px 8px;">
+        <div class="spec">
+          保暖毯(小)（面：4+0；底：1+0对裱纸；内贴1个小袋）展开6<br>
+          2X23；（300克白卡+300克白卡+内小袋300克白卡（成品11X13<br>
+          展开14X14.5））
+        </div>
+      </td>
+      <td rowspan="2">订印<br>数量</td>
+      <td colspan="3" style="text-align:right; padding-right:8px;">个</td>
+    </tr>
+    <tr>
+      <td>号码</td>
+      <td colspan="3" style="text-align:left; padding-left:8px;">由</td>
+      <td style="text-align:right; padding-right:8px;">联</td>
+      <td colspan="3" style="text-align:right; padding-right:8px;">页/本</td>
+    </tr>
+  </table>
+
+  <!-- 六开/对开(两行) + 拼版数量(合并两行) + 备注 + 模房 -->
+  <table class="bordered gap-top">
+    <tr style="height: 30px;">
+      <td style="width:40%; padding:6px; white-space:nowrap;">
+        <span class="ck"></span>&nbsp;六开&nbsp;&nbsp;&nbsp;新&nbsp;件&nbsp;&nbsp;旧&nbsp;件&nbsp;&nbsp;共&nbsp;件&nbsp;&nbsp;已找&nbsp;件
+      </td>
+      <td class="label" style="width:5%;" rowspan="2">拼版<br>数量</td>
+      <td style="width:12%;">横&nbsp;1&nbsp;个</td>
+      <td class="left" style="width:43%; padding:6px 8px; vertical-align:top;" rowspan="2">
+        备注：封面发城东出CTP1套，底发城东出4开CTP1件
+      </td>
+    </tr>
+    <tr style="height: 30px;">
+      <td style="width:40%; padding:6px; white-space:nowrap;">
+        <span class="ck on"></span>&nbsp;对开&nbsp;&nbsp;&nbsp;新&nbsp;件&nbsp;&nbsp;旧&nbsp;件&nbsp;&nbsp;共&nbsp;件&nbsp;&nbsp;已找&nbsp;件
+      </td>
+      <td style="width:12%;">竖&nbsp;2&nbsp;个</td>
+    </tr>
+  </table>
+
+  <!-- 纸类 / 发纸数(张) / 开纸（竖排标签） + 尺寸数据 + 右侧备注（纸类加宽、备注缩窄） -->
+  <table class="bordered gap-top">
+    <colgroup>
+      <col style="width:30%;">
+      <col style="width:10%;">
+      <col style="width:5%;">
+      <col style="width:10%;">
+      <col style="width:10%;">
+      <col style="width:35%;">
+    </colgroup>
+    <tr class="size-row">
+      <td class="label">纸类</td>
+      <td class="label">发纸数（张）</td>
+      <td rowspan="8" class="label" style="writing-mode:vertical-rl; text-orientation:upright; padding:8px 2px;">开 纸</td>
+      <td class="size-merge" rowspan="2">
+        1.19 <span class="ck"></span><br>
+        1.09 <span class="ck on"></span>
+      </td>
+      <td class="size-merge" rowspan="2">
+        0.89 <span class="ck on"></span><br>
+        0.79 <span class="ck on"></span>
+      </td>
+      <td class="left" style="padding:6px 8px; vertical-align:top;" rowspan="8">
+        不标准尺寸开纸图样<br><br>
+        内小袋贴260克白卡，纸边1/4+14.5=1320张
+      </td>
+    </tr>
+    <tr>
+      <td>金蝶兰300克白卡纸订规格86*95=</td>
+      <td>720</td>
+    </tr>
+    <tr>
+      <td rowspan="2">面：切成64.5*47.5=740</td>
+      <td rowspan="2"></td>
+      <td class="size-cell">47.5</td>
+      <td class="size-cell">64.5</td>
+    </tr>
+    <tr>
+      <td class="size-cell">开数</td>
+      <td class="size-cell">2开面</td>
+    </tr>
+    <tr class="size-row">
+      <td></td>
+      <td></td>
+      <td class="size-merge" rowspan="2">
+        1.19 <span class="ck"></span><br>
+        1.09 <span class="ck on"></span>
+      </td>
+      <td class="size-merge" rowspan="2">
+        0.89 <span class="ck on"></span><br>
+        0.79 <span class="ck on"></span>
+      </td>
+    </tr>
+    <tr>
+      <td rowspan="2">底：切成64.3*47.3=700+20</td>
+      <td rowspan="2"></td>
+    </tr>
+    <tr>
+      <td class="size-cell">47.3</td>
+      <td class="size-cell">64.3</td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td class="size-cell">开数</td>
+      <td class="size-cell">2开底</td>
+    </tr>
+  </table>
+
+  <!-- 机印说明 -->
+  <table class="bordered gap-top">
+    <tr>
+      <td class="label" style="width:8%;" rowspan="6">机<br>印<br>说<br>明</td>
+      <td class="label" style="width:27%;">纸 别</td>
+      <td class="label" style="width:10%;">印 色</td>
+      <td class="label" style="width:10%;">实印数(张)</td>
+      <td class="label" style="width:10%;">放数(张)</td>
+      <td class="label" style="width:35%;">备 注</td>
+    </tr>
+    <tr>
+      <td>面：300克白卡纸</td>
+      <td>4+0</td>
+      <td>600+60</td>
+      <td>80</td>
+      <td class="left" style="vertical-align:top; padding:6px 8px;" rowspan="5">
+        附彩打样1张<br>
+        注意：印底时要用粗糙那边印刷
+      </td>
+    </tr>
+    <tr>
+      <td>底：300克白卡纸<br>（要用粗糙那边印刷）</td>
+      <td>黑色<br>1+0</td>
+      <td>600+60</td>
+      <td>50</td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+  </table>
+
+  <!-- 后工序（含装订） -->
+  <table class="bordered gap-top">
+    <tr>
+      <td class="label" style="width:8%;" rowspan="2">后<br>工<br>序</td>
+      <td style="padding:0;">
+        <table class="inner" style="width:100%;">
+          <tr>
+            <td style="width:8%;">啤</td>
+            <td style="width:10%;">旧版</td>
+            <td style="width:12%;">特别说明：</td>
+            <td style="width:70%;"></td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:0;">
+        <table class="inner" style="width:100%;">
+          <tr style="font-size:11px;">
+            <td style="width:8%;">光胶</td>
+            <td style="width:8%;">哑胶</td>
+            <td style="width:5%;">磨光</td>
+            <td style="width:5%;">吸塑油</td>
+            <td style="width:4%;">烫金</td>
+            <td style="width:4%;">烫银</td>
+            <td style="width:4%;">过油</td>
+            <td style="width:4%;">UV</td>
+            <td style="width:4%;">凹凸</td>
+            <td style="width:4%;">压纹</td>
+            <td style="width:4%;">啤</td>
+            <td style="width:4%;">贴</td>
+            <td style="width:4%;">裱纸</td>
+            <td style="width:4%;">粘坑</td>
+            <td style="width:4%;">打孔</td>
+            <td style="width:4%;">鸡眼</td>
+            <td style="width:4%;">压线</td>
+            <td style="width:6%;">啤皮筋</td>
+            <td style="width:7%;">贴PVC片</td>
+            <td style="width:4%;">其它</td>
+          </tr>
+          <tr style="font-size:11px;">
+            <td><span class="ck"></span>单面<br><span class="ck"></span>双面</td>
+            <td><span class="ck"></span>单面<br><span class="ck"></span>双面</td>
+            <td><span class="ck"></span></td>
+            <td><span class="ck"></span></td>
+            <td><span class="ck"></span></td>
+            <td><span class="ck"></span></td>
+            <td><span class="ck"></span></td>
+            <td><span class="ck"></span></td>
+            <td><span class="ck"></span></td>
+            <td><span class="ck"></span></td>
+            <td><span class="ck on"></span></td>
+            <td><span class="ck on"></span></td>
+            <td><span class="ck on"></span></td>
+            <td><span class="ck"></span></td>
+            <td><span class="ck"></span></td>
+            <td><span class="ck"></span></td>
+            <td><span class="ck"></span></td>
+            <td><span class="ck"></span></td>
+            <td><span class="ck"></span></td>
+            <td><span class="ck"></span></td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td class="label" style="width:8%;" rowspan="3">
+        <div style="writing-mode:vertical-rl; text-orientation:upright;">装 订</div>
+      </td>
+      <td style="padding:0;">
+        <table class="inner" style="width:100%;">
+          <tr>
+            <td class="left" style="width:24%; padding:6px;" rowspan="3">
+              <span class="ck"></span>散张 &nbsp;&nbsp;&nbsp;
+              <span class="ck"></span>骑钉<br>
+              <span class="ck"></span>锁线 &nbsp;&nbsp;&nbsp;
+              <span class="ck"></span>胶装<br>
+              <span class="ck"></span>其它&nbsp;___
+            </td>
+            <td style="width:12%; padding:6px; text-align:right; padding-right:12px;">张</td>
+            <td style="width:12%; padding:6px; text-align:center; vertical-align:top;">每本</td>
+            <td class="left" style="width:40%; padding:6px;" rowspan="2">
+              特殊说明：<br>
+              面300克白卡底300克白卡对裱纸；内贴1个小袋300克白卡(展开14X14 5)。注意：下次做单个啤版，切成品后才啤。
+            </td>
+            <td style="width:12%; padding:6px;" rowspan="3">
+              检查点数<br>
+              <span class="ck on"></span>尽 送<br>
+              <span class="ck"></span>实 送
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align:right; padding-right:12px;">1200个</td>
+            <td style="text-align:right; padding-right:12px;">份</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+
+  <!-- 封装 / 包装 -->
+  <table class="bordered gap-top">
+    <tr>
+      <td class="label" style="width:8%;" rowspan="4">
+        <div style="writing-mode:vertical-rl; text-orientation:upright;">封 装</div>
+      </td>
+      <td style="width:18%;" colspan="5">横 &nbsp;cm&nbsp; 竖 &nbsp;cm</td>
+      <td class="left" style="width:34%; padding:6px 8px;" rowspan="4">
+        特殊说明：<br>
+        包装要求：不用折，100个/大包
+      </td>
+      <td class="label" style="width:8%;" rowspan="4">
+        <div style="writing-mode:vertical-rl; text-orientation:upright;">包 装</div>
+      </td>
+      <td style="width:16%;" rowspan="2">合格证</td>
+      <td class="left" style="width:16%; padding:4px 6px;">
+        <span class="ck on"></span>有厂名
+      </td>
+    </tr>
+    <tr>
+      <td class="label" rowspan="3">四边留位</td>
+      <td>头</td>
+      <td>脚</td>
+      <td>左</td>
+      <td>右</td>
+      <td class="left" style="padding:4px 6px;">
+        <span class="ck"></span>无厂名
+      </td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td class="left" style="padding:4px 6px;">
+        <span class="ck on"></span>纸包
+      </td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td class="left" style="padding:4px 6px;">
+        <span class="ck"></span>纸箱
+      </td>
+      <td></td>
+    </tr>
+  </table>
+
+  <!-- 底部签名 -->
+  <div class="bottom-sign">
+    <div style="width:35%;">开单人：</div>
+    <div style="width:32%;">业务：</div>
+    <div style="width:33%;">印刷前对稿：</div>
+  </div>
+
+  </div><!-- /form-body -->
+
+  <!-- 右侧竖排联次标签 -->
+  <div class="side-tag">
+    <div>一 版房/存根 白</div>
+    <div>二 印刷 红</div>
+    <div>三 切纸 黄</div>
+  </div>
+
+</div>
+
+</body>
+</html>

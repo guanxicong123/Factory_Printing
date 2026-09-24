@@ -1,0 +1,181 @@
+/* ===== 全局基础样式 ===== */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  font-family: "微软雅黑", "Microsoft YaHei", "SimSun", sans-serif;
+  font-size: 13px;
+  color: #222;
+  background: #eceff1;
+  height: 100%;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ============ 真实工单表单样式（源自工单0022379.html，预览/打印用） ============ */
+.form-doc {
+  width: 210mm;
+  margin: 0 auto;
+  background: #fff;
+  border: 1px solid #000;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #000;
+  font-family: "SimSun", "宋体", "Microsoft YaHei", serif;
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  padding-right: 4px;
+}
+.form-body {
+  flex: 1;
+  padding: 10px 8px 16px 10px;
+  min-width: 0;
+}
+.title-bar { position: relative; text-align: center; margin: 6px 0 10px; height: 40px; }
+.title-bar .title {
+  display: inline-block; font-size: 24px; font-weight: 700;
+  letter-spacing: 10px; padding-left: 10px; line-height: 40px;
+}
+.form-doc table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.form-doc table.bordered > tbody > tr > td,
+.form-doc table.bordered > tbody > tr > th {
+  border: 1px solid #000;
+  padding: 4px 6px; text-align: center; vertical-align: middle; font-size: 12px;
+  height: 30px; overflow: hidden;
+}
+.form-doc .left { text-align: left !important; }
+.form-doc .label { background: #fff; font-weight: normal; }
+.form-doc .size-row td { height: 13px; line-height: 1; }
+.form-doc table.inner td { height: 28px; }
+.form-doc [contenteditable] {
+  display: inline-block; max-width: 100%;
+  word-break: break-all; overflow-wrap: break-word; overflow: hidden;
+}
+.form-doc [contenteditable]:not([data-multiline="1"]):not(.spec):not(td.left) {
+  white-space: nowrap; text-overflow: ellipsis; vertical-align: middle;
+}
+.form-doc [contenteditable][data-multiline="1"],
+.form-doc .spec[contenteditable],
+.form-doc td.left[contenteditable] { white-space: pre-wrap; }
+.form-doc .spec[contenteditable] { line-height: 1.3; max-height: 56px; }
+.form-doc td.left[contenteditable] { line-height: 1.3; max-height: 92px; }
+.top-info [contenteditable],
+.bottom-sign [contenteditable] {
+  height: 28px; max-height: 28px; overflow: hidden;
+  white-space: nowrap; text-overflow: ellipsis;
+}
+.top-info {
+  display: flex; border-bottom: 1px solid #000; font-size: 12px; line-height: 28px;
+}
+.top-info > div { padding: 0 8px; white-space: nowrap; }
+.top-info .right { text-align: right; flex: 1; }
+.bottom-sign {
+  display: flex; border-top: 1px solid #000; margin-top: -1px; font-size: 12px; line-height: 28px;
+}
+.bottom-sign > div { padding: 0 8px; }
+.side-tag {
+  width: 18px; flex-shrink: 0; align-self: center;
+  display: flex; flex-direction: column; justify-content: space-around;
+  align-items: center; font-size: 12px; padding: 30px 2px; gap: 10px;
+}
+.side-tag > div { writing-mode: vertical-rl; text-orientation: upright; letter-spacing: 2px; }
+
+.ck {
+  display: inline-block; width: 11px; height: 11px;
+  border: 1px solid #000; margin: 0 2px 0 6px; vertical-align: middle;
+  position: relative; background: #fff; cursor: pointer; user-select: none;
+}
+.ck.on::after {
+  content: "V"; position: absolute; inset: 0; line-height: 10px;
+  text-align: center; font-size: 10px; font-weight: bold;
+}
+.v-text { writing-mode: vertical-rl; text-orientation: upright; letter-spacing: 2px; padding: 4px 2px; }
+.rotate-90 {
+  writing-mode: horizontal-tb; transform: rotate(90deg); transform-origin: center center;
+  white-space: nowrap; letter-spacing: 2px; font-size: 12px; display: inline-block; margin: 0 auto;
+}
+.size-cell { white-space: nowrap; padding: 0 4px; line-height: 1; font-size: 10px; }
+.size-cell .ck { margin: 0 0 0 4px; width: 9px; height: 9px; }
+.size-cell .ck.on::after { line-height: 8px; font-size: 9px; }
+.size-merge { padding: 0 1px; line-height: 0.9; font-size: 9px; vertical-align: middle; }
+.size-merge .ck { width: 7px; height: 7px; margin: 0 0 0 2px; vertical-align: middle; }
+.size-merge .ck.on::after { line-height: 6px; font-size: 7px; }
+.size-row { height: 13px; }
+.inner { border: 0; }
+.inner td { border: 1px solid #000; }
+.gap-top { margin-top: -1px; }
+.size-cell-left { white-space: normal; padding: 2px 4px; line-height: 1; font-size: 11px; text-align: left; }
+
+/* 成品规格行：横 cm 与 竖 cm 两端对齐（flex 包在内部 wrap，td 保持固定行高不撑开） */
+.spec-cell {
+  height: 30px;
+  padding: 0 !important;
+  overflow: hidden;
+}
+.spec-cell .spec-wrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  width: 100% !important;
+  height: 100%;
+  padding: 0 8px;
+}
+.spec-cell .spec-group {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+}
+.spec-cell .spec-group + .spec-group {
+  border-left: 1px dashed #cfd8dc;
+  padding-left: 8px;
+  margin-left: 8px;
+}
+.spec-lbl { font-weight: 600; }
+.spec-val { flex: 1; text-align: center; }
+.spec-unit { color: #37474f; }
+
+td[data-field], div[data-field] { cursor: text; }
+td[data-field]:focus, div[data-field]:focus { outline: 1px dashed #f9a825; background: #fffde7; }
+
+/* ============ 打印样式 ============ */
+@media print {
+  body { background: #fff !important; height: auto !important; overflow: visible !important; }
+  #app { height: auto !important; display: block !important; overflow: visible !important; }
+
+  /* 隐藏非打印区域：工具栏/侧栏/状态栏/编辑区 */
+  .app-toolbar, .app-sidebar, .app-statusbar, .edit-scroll { display: none !important; }
+
+  /* 主布局全部放开约束，避免裁剪 */
+  .app-body, .app-content, .preview-scroll, .preview-root {
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #fff !important;
+  }
+
+  .form-doc {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    border: 1px solid #000 !important;
+    padding-right: 4px !important;
+    box-shadow: none !important;
+  }
+  .form-doc * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .preview-root .ck { pointer-events: none !important; }
+  td[data-field], div[data-field] { outline: none !important; background: transparent !important; }
+
+  @page { size: A4 portrait; margin: 8mm; }
+}
