@@ -86,7 +86,7 @@ export function buildWorkOrderDoc(order) {
       <table class="bordered gap-top">
         <tr style="height:auto;">
           <td style="width:54%; padding:6px; white-space:nowrap; overflow:visible;">
-            <span class="ck ${ck('liukai')}" data-ck="liukai"></span>&nbsp;六开&nbsp;&nbsp;新&nbsp;件&nbsp;${inp('xinJian')}&nbsp;&nbsp;旧&nbsp;件&nbsp;${inp('jiuJian')}&nbsp;&nbsp;共&nbsp;件&nbsp;${inp('gongJian')}&nbsp;&nbsp;已找&nbsp;件&nbsp;${inp('yiZhaoJian')}
+            <span class="ck ${ck('liukai')}" data-ck="liukai"></span>&nbsp;六开&nbsp;&nbsp;新&nbsp;${inp('xinJian')}&nbsp;件&nbsp;&nbsp;旧&nbsp;${inp('jiuJian')}&nbsp;件&nbsp;&nbsp;共&nbsp;${inp('gongJian')}&nbsp;件&nbsp;&nbsp;已找&nbsp;${inp('yiZhaoJian')}&nbsp;件
           </td>
           <td class="label" style="width:5%;" rowspan="2">拼版<br>数量</td>
           <td style="width:10%;">横&nbsp;${inp('pinbanH')}&nbsp;个</td>
@@ -94,7 +94,7 @@ export function buildWorkOrderDoc(order) {
         </tr>
         <tr style="height:auto;">
           <td style="width:54%; padding:6px; white-space:nowrap; overflow:visible;">
-            <span class="ck ${ck('duikai')}" data-ck="duikai"></span>&nbsp;对开&nbsp;&nbsp;新&nbsp;件&nbsp;${inp('dkXin')}&nbsp;&nbsp;旧&nbsp;件&nbsp;${inp('dkJiu')}&nbsp;&nbsp;共&nbsp;件&nbsp;${inp('dkGong')}&nbsp;&nbsp;已找&nbsp;件&nbsp;${inp('dkZhao')}
+            <span class="ck ${ck('duikai')}" data-ck="duikai"></span>&nbsp;对开&nbsp;&nbsp;新&nbsp;${inp('dkXin')}&nbsp;件&nbsp;&nbsp;旧&nbsp;${inp('dkJiu')}&nbsp;件&nbsp;&nbsp;共&nbsp;${inp('dkGong')}&nbsp;件&nbsp;&nbsp;已找&nbsp;${inp('dkZhao')}&nbsp;件
           </td>
           <td style="width:10%;">竖&nbsp;${inp('pinbanS')}&nbsp;个</td>
         </tr>
@@ -102,12 +102,12 @@ export function buildWorkOrderDoc(order) {
 
       <table class="bordered gap-top">
         <colgroup>
-          <col style="width:40%;"><col style="width:10%;"><col style="width:5%;"><col style="width:10%;"><col style="width:10%;"><col style="width:25%;">
+          <col style="width:30%;"><col style="width:8%;"><col style="width:7%;"><col style="width:8%;"><col style="width:8%;"><col style="width:24%;"><col style="width:15%;">
         </colgroup>
         <tr class="size-row">
           <td class="label">纸类</td>
           <td class="label">发纸数(张)</td>
-          <td rowspan="8" class="label" style="writing-mode:vertical-rl; text-orientation:upright; padding:8px 2px;">开 纸</td>
+          <td rowspan="11" class="label" style="writing-mode:vertical-rl; text-orientation:upright; padding:8px 2px;">开 纸</td>
           <td class="size-merge" rowspan="2">
             1.19 <span class="ck ${ck('sz119a')}" data-ck="sz119a"></span><br>
             1.09 <span class="ck ${ck('sz109a')}" data-ck="sz109a"></span>
@@ -116,12 +116,14 @@ export function buildWorkOrderDoc(order) {
             0.89 <span class="ck ${ck('sz089a')}" data-ck="sz089a"></span><br>
             0.79 <span class="ck ${ck('sz079a')}" data-ck="sz079a"></span>
           </td>
-          <td class="left" style="padding:4px 8px; vertical-align:top;" rowspan="8">${txtarea('paperNote')}</td>
+          <td class="label" style="writing-mode:vertical-rl; text-orientation:upright; padding:8px 2px;" rowspan="11">面/底尺寸</td>
+          <td class="left" style="padding:4px 8px; vertical-align:top;" rowspan="11">${txtarea('paperNote')}</td>
         </tr>
+        ${[1,2,3,4,5].map(n => `
         <tr>
-          <td>${inp('paperType')}</td>
-          <td>${inp('paperCount')}</td>
-        </tr>
+          <td>${inp(n === 1 ? 'paperType' : ('paperType' + n))}</td>
+          <td>${inp(n === 1 ? 'paperCount' : ('paperCount' + n))}</td>
+        </tr>`).join('')}
         <tr>
           <td rowspan="2" class="size-cell-left">${t('paperMian')}</td>
           <td rowspan="2"></td>

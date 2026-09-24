@@ -82,6 +82,30 @@ const packCks = [
   ['bxYouChangMing', '有厂名'], ['bxWuChangMing', '无厂名'],
   ['bxZhiBao', '纸包'], ['bxZhiXiang', '纸箱']
 ];
+
+/* ===== 单选组（二选一，映射到 cks 两个布尔键） ===== */
+// 传入 [选A时ck键, 选B时ck键]，读写互斥单选
+function radioPair(ckA, ckB) {
+  return {
+    get: () => {
+      const c = props.order.cks || {};
+      if (c[ckA]) return ckA;
+      if (c[ckB]) return ckB;
+      return '';
+    },
+    set: (v) => {
+      if (!props.order.cks) props.order.cks = {};
+      props.order.cks[ckA] = v === ckA;
+      props.order.cks[ckB] = v === ckB;
+    }
+  };
+}
+// 各单选组
+const songMode = radioPair('zJinSong', 'zShiSong');          // 尽送/实送
+const glassMode = radioPair('gGuangJiaoDan', 'gGuangJiaoShuang'); // 光胶单面/双面
+const yaMode = radioPair('gYaJiaoDan', 'gYaJiaoShuang');     // 哑胶单面/双面
+const certMode = radioPair('bxYouChangMing', 'bxWuChangMing'); // 合格证 有厂名/无厂名
+const packMode = radioPair('bxZhiBao', 'bxZhiXiang');        // 纸包/纸箱
 </script>
 
 <template>
@@ -202,14 +226,19 @@ const packCks = [
 
     <!-- 区块5：纸类 / 开纸尺寸 -->
     <el-card shadow="never" class="ep-card">
-      <div class="row3">
+      <!-- 纸类 / 发纸数：5 组一一对应 -->
+      <div v-for="n in 5" :key="n" class="row3">
         <div class="fld grow">
-          <span class="fld-label">纸类</span>
-          <el-input v-model="f.paperType" placeholder="纸类规格" />
+          <span class="fld-label">纸类 {{ n > 1 ? n : '' }}</span>
+          <el-input :model-value="n===1 ? f.paperType : f['paperType'+n]"
+                    @update:model-value="v => (n===1 ? (f.paperType=v) : (f['paperType'+n]=v))"
+                    placeholder="纸类规格" />
         </div>
         <div class="fld">
           <span class="fld-label">发纸数(张)</span>
-          <el-input v-model="f.paperCount" placeholder="张数" />
+          <el-input :model-value="n===1 ? f.paperCount : f['paperCount'+n]"
+                    @update:model-value="v => (n===1 ? (f.paperCount=v) : (f['paperCount'+n]=v))"
+                    placeholder="张数" />
         </div>
       </div>
       <div class="row3">
@@ -276,7 +305,27 @@ const packCks = [
     <!-- 区块7：后工序 -->
     <el-card shadow="never" class="ep-card">
       <div class="ck-cluster wrap">
-        <el-checkbox v-for="([k, lbl]) in postCks" :key="k" :label="lbl" v-model="cks[k]" />
+        <!-- 光胶 单面/双面（单选） -->
+        <span class="radio-group-w">
+          <span class="radio-group-label">光胶</span>
+          <el-radio-group :model-value="glassMode.get()" @update:model-value="glassMode.set">
+            <el-radio value="gGuangJiaoDan">单面</el-radio>
+            <el-radio value="gGuangJiaoShuang">双面</el-radio>
+          </el-radio-group>
+        </span>
+        <!-- 哑胶 单面/双面（单选） -->
+        <span class="radio-group-w">
+          <span class="radio-group-label">哑胶</span>
+          <el-radio-group :model-value="yaMode.get()" @update:model-value="yaMode.set">
+            <el-radio value="gYaJiaoDan">单面</el-radio>
+            <el-radio value="gYaJiaoShuang">双面</el-radio>
+          </el-radio-group>
+        </span>
+        <!-- 其余工艺勾选 -->
+        <el-checkbox
+          v-for="([k, lbl]) in postCks.filter(([k]) => !['gGuangJiaoDan','gGuangJiaoShuang','gYaJiaoDan','gYaJiaoShuang'].includes(k))"
+          :key="k" :label="lbl" v-model="cks[k]"
+        />
       </div>
       <div class="fld">
         <span class="fld-label">后工序特别说明</span>
@@ -299,10 +348,10 @@ const packCks = [
         </div>
         <div class="fld">
           <span class="fld-label">检查点数</span>
-          <div class="ck-cluster">
-            <el-checkbox v-model="cks.zJinSong" label="尽送" />
-            <el-checkbox v-model="cks.zShiSong" label="实送" />
-          </div>
+          <el-radio-group :model-value="songMode.get()" @update:model-value="songMode.set">
+            <el-radio value="zJinSong">尽送</el-radio>
+            <el-radio value="zShiSong">实送</el-radio>
+          </el-radio-group>
         </div>
       </div>
       <div class="fld">
@@ -331,10 +380,18 @@ const packCks = [
       </div>
       <div class="row3">
         <div class="fld">
-          <span class="fld-label">合格证 / 包装</span>
-          <div class="ck-cluster">
-            <el-checkbox v-for="([k, lbl]) in packCks" :key="k" :label="lbl" v-model="cks[k]" />
-          </div>
+          <span class="fld-label">合格证</span>
+          <el-radio-group :model-value="certMode.get()" @update:model-value="certMode.set">
+            <el-radio value="bxYouChangMing">有厂名</el-radio>
+            <el-radio value="bxWuChangMing">无厂名</el-radio>
+          </el-radio-group>
+        </div>
+        <div class="fld">
+          <span class="fld-label">包装</span>
+          <el-radio-group :model-value="packMode.get()" @update:model-value="packMode.set">
+            <el-radio value="bxZhiBao">纸包</el-radio>
+            <el-radio value="bxZhiXiang">纸箱</el-radio>
+          </el-radio-group>
         </div>
       </div>
       <div class="fld">
