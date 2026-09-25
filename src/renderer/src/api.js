@@ -51,21 +51,26 @@ function mockApi() {
       orderQty: '1200', unit: '个'
     }));
   }
-  function listOrders() {
+  function listOrders(opts = {}) {
     const now = ts();
     const items = [];
     store.forEach((o, fileName) => {
-      if (!store.has(fileName)) return; // 实际为遍历，防写入半途
       items.push({
         id: o.meta.id,
         fileName,
         orderNo: o.orderNo,
         productName: o.fields.customer || o.fields.productSpec || '',
-        updatedAt: now
+        updatedAt: o.meta.updatedAt || now
       });
     });
     items.sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
-    return Promise.resolve(items);
+    const total = items.length;
+    const offset = Math.min(opts.offset || 0, total);
+    const limit = opts.limit != null ? opts.limit : total - offset;
+    return Promise.resolve({
+      items: items.slice(offset, offset + limit),
+      total
+    });
   }
   function loadOrder(fileName) {
     const o = store.get(fileName);
@@ -113,7 +118,11 @@ export const api = invoke
       saveOrder: (order) => invoke('order_save', { order }),
       saveOrderAs: (order) => invoke('order_save_as', { order }),
       printOrder: () => invoke('order_print'),
-      listOrders: () => invoke('order_list'),
+      listOrders: (opts = {}) =>
+        invoke('order_list', {
+          limit: opts.limit ?? null,
+          offset: opts.offset ?? null
+        }),
       loadOrder: (fileName) => invoke('order_load', { fileName }),
       duplicateOrder: (order) => invoke('order_duplicate', { order }),
       deleteOrder: (fileName) => invoke('order_delete', { fileName }),

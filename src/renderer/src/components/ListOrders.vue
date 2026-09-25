@@ -1,22 +1,20 @@
 <script setup>
 /**
- * 工单列表页：全宽 el-table 展示全部工单，支持搜索、分页、复制、删除、打开。
+ * 工单列表页：全宽 el-table，服务端分页（与侧栏同源 order_list）。
  *
- * 职责
- * - 使用 api.listOrders 刷新列表并传给父级共享的 ordersCache（新增/删除/打开后父级可同步刷新）。
- * - 搜索按 单号 / 客户 / 合同号 前端过滤；分页在前端数据上进行。
- * - 复制：api.duplicateOrder(order) 生成新工单号，随后 api.saveOrder 持久化；refresh 后提示。
- * - 删除：ElMessageBox.confirm 确认后 api.deleteOrder(fileName)。
- * - 打开：emit open(fileName) 由 App 载入并切到编辑视图。
+ * - 按页请求 api.listOrders({ limit, offset })，避免几万条全量进内存
+ * - 搜索：在当前已加载页的摘要 + 懒加载扩展字段上过滤（跨全库搜索需后续加后端 q）
+ * - 复制 / 删除后 emit refresh，由父级刷新侧栏；本页自行再拉当前页
  */
-import { ref, reactive, computed, onMounted, watch } from 'vue';
+import { ref, reactive, computed, watch } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Search } from '@element-plus/icons-vue';
 import { api } from '../api';
 import { displayOrderNo, cnDateToIso } from '../lib/order';
 
 const props = defineProps({
-  orders: { type: Array, default: () => [] }
+  /** 父级刷新侧栏后递增/变化，触发本页重新拉取 */
+  refreshToken: { type: [Number, String], default: 0 }
 });
 const emit = defineEmits(['open', 'refresh']);
 
@@ -25,6 +23,8 @@ const keyword = ref('');
 const page = ref(1);
 const pageSize = ref(10);
 const pageSizes = [10, 20, 50, 100];
+const pageItems = ref([]);
+const total = ref(0);
 
 /* listOrders 的 item 不含客户/合同号/开单日期，按 fileName 懒加载字段缓存 */
 const extraMap = reactive(new Map());
@@ -54,32 +54,32 @@ function matches(row, kw) {
   return no.includes(kw) || customer.includes(kw) || contract.includes(kw) || spec.includes(kw);
 }
 
-const filtered = computed(() => {
-  const raw = props.orders || [];
-  const kw = keyword.value.trim().toLowerCase();
-  return kw ? raw.filter((o) => matches(o, kw)) : raw;
-});
-
 const rows = computed(() => {
-  const list = filtered.value;
-  const start = (page.value - 1) * pageSize.value;
-  return list.slice(start, start + pageSize.value);
+  const kw = keyword.value.trim().toLowerCase();
+  if (!kw) return pageItems.value;
+  return pageItems.value.filter((o) => matches(o, kw));
 });
 
-const filteredTotal = computed(() => filtered.value.length);
+async function fetchPage() {
+  loading.value = true;
+  try {
+    const offset = (page.value - 1) * pageSize.value;
+    const res = await api.listOrders({ limit: pageSize.value, offset });
+    pageItems.value = res?.items || [];
+    total.value = res?.total ?? pageItems.value.length;
+    pageItems.value.forEach((o) => loadExtra(o));
+  } catch (e) {
+    pageItems.value = [];
+    total.value = 0;
+    ElMessage.error('加载列表失败：' + e);
+  } finally {
+    loading.value = false;
+  }
+}
 
-/* 数据源变化时：预载全部行的扩展字段，并修正页码 */
-watch(
-  () => props.orders,
-  (list) => {
-    (list || []).forEach((o) => loadExtra(o));
-    const max = Math.max(1, Math.ceil(filteredTotal.value / pageSize.value));
-    if (page.value > max) page.value = max;
-  },
-  { immediate: true }
-);
-
-watch(keyword, () => { page.value = 1; });
+watch([page, pageSize], fetchPage, { immediate: true });
+watch(() => props.refreshToken, () => { fetchPage(); });
+watch(keyword, () => { /* 仅过滤当前页，不重置页码 */ });
 
 function cellDate(row) {
   const extra = extraMap.get(row.fileName);
@@ -98,8 +98,8 @@ async function handleCopy(row) {
     const newOrder = await api.duplicateOrder(order);
     const res = await api.saveOrder(newOrder);
     ElMessage.success(`已复制为新工单：No. ${res.order.orderNo || ''}`);
-    refresh();
-    // 复制成功后直接打开编辑态
+    emit('refresh');
+    await fetchPage();
     if (res.order.meta && res.order.meta.fileName) {
       emit('open', res.order.meta.fileName);
     }
@@ -116,32 +116,32 @@ async function handleDelete(row) {
       { confirmButtonText: '删除', cancelButtonText: '取消', type: 'warning' }
     );
   } catch (e) {
-    return; // 用户取消
+    return;
   }
   try {
     await api.deleteOrder(row.fileName);
     ElMessage.success(`已删除 ${row.fileName}`);
-    refresh();
+    emit('refresh');
+    await fetchPage();
   } catch (e) {
     ElMessage.error('删除失败：' + e);
   }
 }
 
-function refresh() { emit('refresh'); }
-
-onMounted(() => {
-  (props.orders || []).forEach((o) => loadExtra(o));
-});
+async function refresh() {
+  emit('refresh');
+  await fetchPage();
+}
 </script>
 
 <template>
   <div class="list-orders">
     <div class="list-head">
-      <div class="list-title">工单列表（{{ filteredTotal }} 条）</div>
+      <div class="list-title">工单列表（{{ total }} 条）</div>
       <div class="list-filters">
         <el-input
           v-model="keyword"
-          placeholder="搜索 单号 / 客户 / 合同号"
+          placeholder="搜索本页 单号 / 客户 / 合同号"
           clearable
           size="small"
           class="search-input"
@@ -200,7 +200,7 @@ onMounted(() => {
         v-model:current-page="page"
         v-model:page-size="pageSize"
         :page-sizes="pageSizes"
-        :total="filteredTotal"
+        :total="total"
         layout="total, sizes, prev, pager, next, jumper"
         background
         small

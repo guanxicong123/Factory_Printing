@@ -46,6 +46,14 @@ pub struct OrderListItem {
     pub updated_at: String,
 }
 
+/// 分页列表结果：只返回当页摘要，避免几万条一次性序列化到前端
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct OrderListPage {
+    pub items: Vec<OrderListItem>,
+    pub total: usize,
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct SaveResult {
@@ -288,12 +296,65 @@ fn order_save_as(app: tauri::AppHandle, order: Order) -> Result<Option<SaveResul
     }))
 }
 
+/// 从单个工单文件解析列表摘要（解析失败时仍返回占位项）
+fn order_list_item_from_path(path: &std::path::Path, file_name: &str) -> OrderListItem {
+    match fs::read_to_string(path) {
+        Ok(raw) => {
+            if let Ok(data) = serde_json::from_str::<Order>(&raw) {
+                let order_no = data
+                    .fields
+                    .get("orderNoDisplay")
+                    .cloned()
+                    .map(|s| s.trim_start_matches("No. ").trim().to_string())
+                    .filter(|s| !s.is_empty())
+                    .or_else(|| data.fields.get("orderNo").cloned())
+                    .filter(|s| !s.is_empty())
+                    .unwrap_or_else(|| data.order_no.clone());
+                let product_name = data
+                    .fields
+                    .get("customer")
+                    .cloned()
+                    .filter(|s| !s.is_empty())
+                    .or_else(|| data.fields.get("productSpec").cloned())
+                    .unwrap_or_default();
+                OrderListItem {
+                    id: data.meta.id.clone(),
+                    file_name: file_name.to_string(),
+                    order_no,
+                    product_name,
+                    updated_at: data.meta.updated_at.clone(),
+                }
+            } else {
+                OrderListItem {
+                    id: file_name.trim_end_matches(".json").to_string(),
+                    file_name: file_name.to_string(),
+                    order_no: String::new(),
+                    product_name: String::new(),
+                    updated_at: String::new(),
+                }
+            }
+        }
+        Err(_) => OrderListItem {
+            id: file_name.trim_end_matches(".json").to_string(),
+            file_name: file_name.to_string(),
+            order_no: String::new(),
+            product_name: String::new(),
+            updated_at: String::new(),
+        },
+    }
+}
+
+/// 分页列出工单：按文件 mtime 降序，只解析当页文件（几万条时避免全量反序列化）
 #[tauri::command]
-fn order_list(app: tauri::AppHandle) -> Result<Vec<OrderListItem>, String> {
+fn order_list(
+    app: tauri::AppHandle,
+    limit: Option<usize>,
+    offset: Option<usize>,
+) -> Result<OrderListPage, String> {
     let dir = orders_dir(&app)?;
-    let mut items = Vec::new();
-    if let Ok(entries) = fs::read_dir(dir) {
-        for entry in entries.flatten() {
+    let mut entries: Vec<(PathBuf, String, std::time::SystemTime)> = Vec::new();
+    if let Ok(rd) = fs::read_dir(dir) {
+        for entry in rd.flatten() {
             let path = entry.path();
             if path.extension().and_then(|s| s.to_str()) != Some("json") {
                 continue;
@@ -302,58 +363,24 @@ fn order_list(app: tauri::AppHandle) -> Result<Vec<OrderListItem>, String> {
                 .file_name()
                 .map(|s| s.to_string_lossy().to_string())
                 .unwrap_or_default();
-            match fs::read_to_string(&path) {
-                Ok(raw) => {
-                    if let Ok(data) = serde_json::from_str::<Order>(&raw) {
-                        // orderNo：优先用字段里的 orderNoDisplay / orderNo，回退到结构体 order_no
-                        let order_no = data
-                            .fields
-                            .get("orderNoDisplay")
-                            .cloned()
-                            .map(|s| s.trim_start_matches("No. ").trim().to_string())
-                            .filter(|s| !s.is_empty())
-                            .or_else(|| data.fields.get("orderNo").cloned())
-                            .filter(|s| !s.is_empty())
-                            .unwrap_or_else(|| data.order_no.clone());
-                        // 列表显示名：订印单位（customer），回退产品规格
-                        let product_name = data
-                            .fields
-                            .get("customer")
-                            .cloned()
-                            .filter(|s| !s.is_empty())
-                            .or_else(|| data.fields.get("productSpec").cloned())
-                            .unwrap_or_default();
-                        items.push(OrderListItem {
-                            id: data.meta.id.clone(),
-                            file_name,
-                            order_no,
-                            product_name,
-                            updated_at: data.meta.updated_at.clone(),
-                        });
-                    } else {
-                        items.push(OrderListItem {
-                            id: file_name.trim_end_matches(".json").to_string(),
-                            file_name,
-                            order_no: String::new(),
-                            product_name: String::new(),
-                            updated_at: String::new(),
-                        });
-                    }
-                }
-                Err(_) => {
-                    items.push(OrderListItem {
-                        id: file_name.trim_end_matches(".json").to_string(),
-                        file_name,
-                        order_no: String::new(),
-                        product_name: String::new(),
-                        updated_at: String::new(),
-                    });
-                }
-            }
+            let mtime = entry
+                .metadata()
+                .and_then(|m| m.modified())
+                .unwrap_or(std::time::UNIX_EPOCH);
+            entries.push((path, file_name, mtime));
         }
     }
-    items.sort_by(|a, b| b.updated_at.cmp(&a.updated_at));
-    Ok(items)
+    entries.sort_by(|a, b| b.2.cmp(&a.2));
+    let total = entries.len();
+    let offset = offset.unwrap_or(0).min(total);
+    // 未传 limit 时返回全部（兼容旧调用）；侧栏应显式传 limit
+    let limit = limit.unwrap_or(total.saturating_sub(offset));
+    let end = (offset + limit).min(total);
+    let items = entries[offset..end]
+        .iter()
+        .map(|(path, file_name, _)| order_list_item_from_path(path, file_name))
+        .collect();
+    Ok(OrderListPage { items, total })
 }
 
 #[tauri::command]

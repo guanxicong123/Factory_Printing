@@ -2,8 +2,10 @@
 /**
  * 主应用：顶部工具栏 + 左侧工单列表 + 中部编辑/预览。
  * 所有业务动作（新建/打开/保存/复制/打印）在此集中。
+ *
+ * 左侧列表：后端分页拉取 + DOM 虚拟滚动，避免几万条一次性渲染崩溃。
  */
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted, nextTick } from 'vue';
 import { ElMessage } from 'element-plus';
 import { api } from './api';
 import {
@@ -14,13 +16,55 @@ import EditForm from './components/EditForm.vue';
 import PreviewDoc from './components/PreviewDoc.vue';
 import ListOrders from './components/ListOrders.vue';
 
+/** 侧栏每页拉取条数 */
+const SIDEBAR_PAGE_SIZE = 60;
+/** 侧栏行高（与 CSS .order-item 视觉高度对齐，用于虚拟滚动） */
+const SIDEBAR_ITEM_H = 68;
+const SIDEBAR_OVERSCAN = 8;
+
 // currentOrder 用 reactive：整棵树响应式，子组件 v-model 直接改字段能触发刷新
 const currentOrder = reactive(normalizeOrder(defaultOrder()));
 const currentFileName = ref('');
 const ordersCache = ref([]);
+const ordersTotal = ref(0);
+const listLoading = ref(false);
 const currentView = ref('edit'); // 'edit' | 'preview' | 'list'
 const statusMsg = ref('就绪');
 let dirty = false;
+
+/* ---------- 虚拟滚动状态 ---------- */
+const orderListEl = ref(null);
+const scrollTop = ref(0);
+const viewportH = ref(400);
+
+const listHasMore = computed(() => ordersCache.value.length < ordersTotal.value);
+
+const virtualStart = computed(() =>
+  Math.max(0, Math.floor(scrollTop.value / SIDEBAR_ITEM_H) - SIDEBAR_OVERSCAN)
+);
+const virtualEnd = computed(() =>
+  Math.min(
+    ordersCache.value.length,
+    Math.ceil((scrollTop.value + viewportH.value) / SIDEBAR_ITEM_H) + SIDEBAR_OVERSCAN
+  )
+);
+const visibleOrders = computed(() =>
+  ordersCache.value.slice(virtualStart.value, virtualEnd.value)
+);
+const padTop = computed(() => virtualStart.value * SIDEBAR_ITEM_H);
+const padBottom = computed(() =>
+  Math.max(0, (ordersCache.value.length - virtualEnd.value) * SIDEBAR_ITEM_H)
+);
+
+function onSidebarScroll(e) {
+  const el = e.target;
+  scrollTop.value = el.scrollTop;
+  viewportH.value = el.clientHeight;
+  // 距底部不足约 12 行时预取下一页
+  if (el.scrollHeight - el.scrollTop - el.clientHeight < SIDEBAR_ITEM_H * 12) {
+    loadMoreOrders();
+  }
+}
 
 /* ================= 视图切换 ================= */
 function switchView(view) {
@@ -164,14 +208,56 @@ async function doPrint() {
   }
 }
 
-/* ================= 列表 ================= */
-async function refreshOrderList() {
-  try {
-    ordersCache.value = await api.listOrders();
-  } catch (e) {
-    ordersCache.value = [];
+/* ================= 列表（分页 + 追加） ================= */
+/** 内容不足以产生滚动条时，继续预取直到可滚或无更多 */
+async function fillViewportIfNeeded() {
+  await nextTick();
+  const el = orderListEl.value;
+  if (!el || listLoading.value || !listHasMore.value) return;
+  viewportH.value = el.clientHeight;
+  if (el.scrollHeight <= el.clientHeight + SIDEBAR_ITEM_H) {
+    await loadMoreOrders();
   }
 }
+
+async function loadMoreOrders(reset = false) {
+  if (listLoading.value) return;
+  if (!reset && !listHasMore.value) return;
+  listLoading.value = true;
+  try {
+    const offset = reset ? 0 : ordersCache.value.length;
+    const page = await api.listOrders({ limit: SIDEBAR_PAGE_SIZE, offset });
+    const items = page?.items || [];
+    ordersTotal.value = page?.total ?? items.length;
+    if (reset) {
+      ordersCache.value = items;
+      scrollTop.value = 0;
+      await nextTick();
+      if (orderListEl.value) orderListEl.value.scrollTop = 0;
+    } else {
+      const seen = new Set(ordersCache.value.map((o) => o.fileName));
+      ordersCache.value.push(...items.filter((o) => o && !seen.has(o.fileName)));
+    }
+  } catch (e) {
+    if (reset) {
+      ordersCache.value = [];
+      ordersTotal.value = 0;
+    }
+  } finally {
+    listLoading.value = false;
+  }
+  await fillViewportIfNeeded();
+}
+
+async function refreshOrderList() {
+  await loadMoreOrders(true);
+}
+
+async function onSidebarRefresh() {
+  await refreshOrderList();
+  setStatus('已刷新列表', 'ok');
+}
+
 async function doLoadSelected(fileName) {
   if (!fileName) return;
   try {
@@ -237,14 +323,21 @@ onMounted(async () => {
     <!-- 左侧列表：列表视图中隐藏，列表页全宽 -->
     <aside class="app-sidebar" v-if="currentView!=='list'">
       <div class="sidebar-head">
-        <span>工单列表</span>
-        <el-button size="small" text @click="refreshOrderList; setStatus('已刷新列表','ok')">↻</el-button>
+        <span>工单列表{{ ordersTotal ? `（${ordersTotal}）` : '' }}</span>
+        <el-button size="small" text :loading="listLoading" @click="onSidebarRefresh">↻</el-button>
       </div>
-      <ul class="order-list" v-if="ordersCache.length">
+      <ul
+        v-if="ordersCache.length"
+        ref="orderListEl"
+        class="order-list"
+        @scroll.passive="onSidebarScroll"
+      >
+        <li class="order-spacer" :style="{ height: padTop + 'px' }" aria-hidden="true" />
         <li
-          v-for="o in ordersCache"
+          v-for="o in visibleOrders"
           :key="o.fileName"
           class="order-item"
+          :style="{ height: SIDEBAR_ITEM_H + 'px' }"
           :data-fname="o.fileName"
           :class="{ active: o.fileName === currentFileName }"
           @click="doLoadSelected(o.fileName)"
@@ -253,8 +346,13 @@ onMounted(async () => {
           <span class="order-name">{{ o.productName || '（未填产品名）' }}</span>
           <span class="order-time">{{ o.updatedAt ? o.updatedAt.slice(0,16).replace('T',' ') : '' }}</span>
         </li>
+        <li class="order-spacer" :style="{ height: padBottom + 'px' }" aria-hidden="true" />
+        <li v-if="listLoading" class="order-empty order-loading">加载中…</li>
+        <li v-else-if="!listHasMore && ordersCache.length" class="order-empty order-end">已加载全部</li>
       </ul>
-      <ul v-else class="order-list"><li class="order-empty">（暂无工单）</li></ul>
+      <ul v-else class="order-list">
+        <li class="order-empty">{{ listLoading ? '加载中…' : '（暂无工单）' }}</li>
+      </ul>
     </aside>
 
     <!-- 中部内容 -->
@@ -267,11 +365,11 @@ onMounted(async () => {
       <div v-show="currentView==='preview'" class="preview-scroll">
         <PreviewDoc :order="currentOrder" :key="currentFileName + 'p'" />
       </div>
-      <!-- 列表态：全宽工单列表 -->
+      <!-- 列表态：全宽工单列表（自行按页请求，不依赖侧栏缓存全量） -->
       <ListOrders
         v-show="currentView==='list'"
         class="list-scroll"
-        :orders="ordersCache"
+        :refresh-token="ordersTotal"
         @open="doLoadSelected"
         @refresh="requestRefreshList"
       />
@@ -303,16 +401,20 @@ onMounted(async () => {
   border-bottom: 1px solid #e0e0e0; flex-shrink: 0;
 }
 .order-list { list-style: none; flex: 1; overflow-y: auto; padding: 6px 8px; margin: 0; }
+.order-spacer { padding: 0; margin: 0; border: none; list-style: none; pointer-events: none; }
 .order-item {
-  padding: 9px 10px; margin-bottom: 4px; border-radius: 6px; cursor: pointer;
+  box-sizing: border-box;
+  padding: 8px 10px; margin-bottom: 0; border-radius: 6px; cursor: pointer;
   border: 1px solid transparent; transition: background .12s, border-color .12s;
+  overflow: hidden;
 }
 .order-item:hover { background: #e8f0fe; }
 .order-item.active { background: #e3f2fd; border-color: #90caf9; }
-.order-no { display: block; font-weight: 700; color: #1a237e; font-size: 13.5px; }
-.order-name { display: block; color: #455a64; font-size: 12px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.order-time { display: block; color: #90a4ae; font-size: 11px; margin-top: 2px; }
-.order-empty { color: #999; text-align: center; padding: 20px 0; list-style: none; }
+.order-no { display: block; font-weight: 700; color: #1a237e; font-size: 13.5px; line-height: 1.3; }
+.order-name { display: block; color: #455a64; font-size: 12px; margin-top: 2px; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.order-time { display: block; color: #90a4ae; font-size: 11px; margin-top: 2px; line-height: 1.3; }
+.order-empty { color: #999; text-align: center; padding: 12px 0; list-style: none; font-size: 12px; }
+.order-loading, .order-end { padding: 8px 0; }
 
 .app-content { flex: 1; min-width: 0; overflow: hidden; display: flex; flex-direction: column; }
 .edit-scroll { flex: 1; overflow: auto; background: #eceff1; padding: 16px 20px; }
