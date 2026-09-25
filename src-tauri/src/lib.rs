@@ -148,7 +148,7 @@ fn today_compact() -> String {
     format!("{y:04}{m:02}{d:02}")
 }
 
-/// 合同号：YYYYMMDD + 当天流水 2 位（01、02、03…），如 2026092501
+/// 合同号：LBP + YYYYMMDD + 当天流水 2 位（01、02、03…），如 LBP2026091501
 /// 流水计数按日期分组存于 sequence.json 的 "contract:<YYYYMMDD>" 键。
 fn next_contract_no(app: &tauri::AppHandle) -> Result<String, String> {
     let today = today_compact();
@@ -162,7 +162,7 @@ fn next_contract_no(app: &tauri::AppHandle) -> Result<String, String> {
     seq[count_key.as_str()] = serde_json::json!(n);
     fs::write(seq_file(app)?, seq.to_string())
         .map_err(|e| format!("写入合同号序号失败: {e}"))?;
-    Ok(format!("{today}{:02}", n))
+    Ok(format!("LBP{today}{:02}", n))
 }
 
 /* ---------------- Commands ---------------- */
@@ -178,7 +178,7 @@ fn order_new(app: tauri::AppHandle) -> Result<Order, String> {
     order.meta.file_name = format!("{no}.json");
     order.meta.created_at = now.clone();
     order.meta.updated_at = now;
-    // 自动生成合同号：YYYYMMDD + 当天流水 2 位
+    // 自动生成合同号：LBP + YYYYMMDD + 当天流水 2 位
     order.fields.insert("contractNo".into(), contract_no.clone());
     // SQL 对齐名旧别名也一起更新，前端字体看不到也不影响
     order
@@ -415,7 +415,7 @@ fn order_duplicate(app: tauri::AppHandle, order: Order) -> Result<Order, String>
     // 工单号显示：更新为 No. 新单号（兼容两种存储键）
     new_order.fields.insert("orderNoDisplay".into(), format!("No. {no}"));
     new_order.fields.insert("mJob_No".into(), format!("No. {no}"));
-    // 合同号：生成全新合同号（YYYYMMDD + 当天流水）
+    // 合同号：生成全新合同号（LBP + YYYYMMDD + 当天流水）
     new_order
         .fields
         .insert("contractNo".into(), contract_no.clone());

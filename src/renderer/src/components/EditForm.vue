@@ -311,10 +311,10 @@ const packMode = radioPair('bxZhiBao', 'bxZhiXiang');        // 纸包/纸箱
         </thead>
         <tbody>
           <tr v-for="(r, i) in procRows" :key="i">
-            <td><el-input v-model="f[r.paper]" placeholder="纸别" /></td>
-            <td><el-input v-model="f[r.color]" placeholder="印色" /></td>
-            <td><el-input v-model="f[r.qty]" placeholder="实印数" /></td>
-            <td><el-input v-model="f[r.extra]" placeholder="放数" /></td>
+            <td><el-input v-model="f[r.paper]" /></td>
+            <td><el-input v-model="f[r.color]" /></td>
+            <td><el-input v-model="f[r.qty]" /></td>
+            <td><el-input v-model="f[r.extra]" /></td>
           </tr>
         </tbody>
       </table>
@@ -371,29 +371,36 @@ const packMode = radioPair('bxZhiBao', 'bxZhiXiang');        // 纸包/纸箱
         </div>
       </div>
 
-      <!-- 装订（并入后工序卡片） -->
-      <div class="fld">
-        <span class="fld-label">装订方式</span>
-        <div class="ck-cluster bind-row">
-          <el-checkbox
-            v-for="([k, lbl]) in bindCks.filter(([k]) => k !== 'zQiTa')"
-            :key="k" :label="lbl" v-model="cks[k]"
-          />
-          <el-input v-model="f.zQiTaText" placeholder="其它装订方式" class="bind-other-input" />
-        </div>
-      </div>
-      <div class="row4">
+      <!-- 装订：方式 / 数量公式行 / 检查 / 说明 分行 -->
+      <div class="bind-stack">
         <div class="fld">
-          <span class="fld-label">张数</span>
-          <el-input v-model="f.zZhangCount" />
+          <span class="fld-label">装订方式</span>
+          <div class="ck-cluster bind-row">
+            <el-checkbox
+              v-for="([k, lbl]) in bindCks.filter(([k]) => k !== 'zQiTa')"
+              :key="k" :label="lbl" v-model="cks[k]"
+            />
+            <el-input v-model="f.zQiTaText" placeholder="其它" class="bind-other-input" />
+          </div>
         </div>
         <div class="fld">
-          <span class="fld-label">本数</span>
-          <el-input v-model="f.zBenCount" />
-        </div>
-        <div class="fld">
-          <span class="fld-label">每本份数</span>
-          <el-input v-model="f.zMeiBenFen" />
+          <span class="fld-label">装订数量</span>
+          <div class="bind-qty">
+            <el-input v-model="f.zBenCount" class="bind-qty-input">
+              <template #prepend>本数</template>
+              <template #append>本</template>
+            </el-input>
+            <span class="bind-op" aria-hidden="true">×</span>
+            <el-input v-model="f.zMeiBenFen" class="bind-qty-input">
+              <template #prepend>每本</template>
+              <template #append>份</template>
+            </el-input>
+            <span class="bind-op" aria-hidden="true">=</span>
+            <el-input v-model="f.zZhangCount" class="bind-qty-input">
+              <template #prepend>数量</template>
+              <template #append>个</template>
+            </el-input>
+          </div>
         </div>
         <div class="fld">
           <span class="fld-label">检查点数</span>
@@ -402,68 +409,71 @@ const packMode = radioPair('bxZhiBao', 'bxZhiXiang');        // 纸包/纸箱
             <el-radio value="zShiSong">实送</el-radio>
           </el-radio-group>
         </div>
-      </div>
-      <div class="fld">
-        <span class="fld-label">装订特殊说明</span>
-        <el-input type="textarea" :rows="2" v-model="f.zTeshushuoming" />
+        <div class="fld">
+          <span class="fld-label">装订特殊说明</span>
+          <el-input type="textarea" :rows="2" v-model="f.zTeshushuoming" />
+        </div>
       </div>
     </el-card>
 
-    <!-- 区块9：成品规格 / 包装 -->
+    <!-- 区块9：成品规格 / 包装 —— 对齐原软件：规格+留位 | 说明 | 包装侧栏 -->
     <el-card shadow="never" class="ep-card">
       <template #header><span class="block-title">成品规格 / 包装</span></template>
-      <div class="row3">
-        <div class="fld">
-          <span class="fld-label">成品规格 横(cm)</span>
-          <el-input v-model="f.fkHeng" />
+      <div class="finish-grid">
+        <div class="finish-left">
+          <div class="row2-spec">
+            <div class="fld">
+              <span class="fld-label">横 (cm)</span>
+              <el-input v-model="f.fkHeng" />
+            </div>
+            <div class="fld">
+              <span class="fld-label">竖 (cm)</span>
+              <el-input v-model="f.fkShu" />
+            </div>
+          </div>
+          <div class="fld">
+            <span class="fld-label">四边留位</span>
+            <table class="paper-table sb-table">
+              <thead>
+                <tr><th>头</th><th>脚</th><th>左</th><th>右</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><el-input v-model="f.sbTou" /></td>
+                  <td><el-input v-model="f.sbJiao" /></td>
+                  <td><el-input v-model="f.sbZuo" /></td>
+                  <td><el-input v-model="f.sbYou" /></td>
+                </tr>
+                <tr>
+                  <td><el-input v-model="f.sbTou2" /></td>
+                  <td><el-input v-model="f.sbJiao2" /></td>
+                  <td><el-input v-model="f.sbZuo2" /></td>
+                  <td><el-input v-model="f.sbYou2" /></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-        <div class="fld">
-          <span class="fld-label">成品规格 竖(cm)</span>
-          <el-input v-model="f.fkShu" />
+        <div class="fld finish-note">
+          <span class="fld-label">特殊说明</span>
+          <el-input type="textarea" :rows="5" v-model="f.fkSpecial" />
         </div>
-      </div>
-      <!-- 四边留位：独占一行 -->
-      <div class="fld">
-        <span class="fld-label">四边留位</span>
-        <table class="paper-table sb-table">
-          <thead>
-            <tr><th>头</th><th>脚</th><th>左</th><th>右</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><el-input v-model="f.sbTou" /></td>
-              <td><el-input v-model="f.sbJiao" /></td>
-              <td><el-input v-model="f.sbZuo" /></td>
-              <td><el-input v-model="f.sbYou" /></td>
-            </tr>
-            <tr>
-              <td><el-input v-model="f.sbTou2" /></td>
-              <td><el-input v-model="f.sbJiao2" /></td>
-              <td><el-input v-model="f.sbZuo2" /></td>
-              <td><el-input v-model="f.sbYou2" /></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="row3">
-        <div class="fld">
-          <span class="fld-label">合格证</span>
-          <el-radio-group :model-value="certMode.get()" @update:model-value="certMode.set">
-            <el-radio value="bxYouChangMing">有厂名</el-radio>
-            <el-radio value="bxWuChangMing">无厂名</el-radio>
-          </el-radio-group>
+        <div class="finish-pack">
+          <div class="fld">
+            <span class="fld-label">合格证</span>
+            <el-radio-group :model-value="certMode.get()" @update:model-value="certMode.set" class="pack-col">
+              <el-radio value="bxYouChangMing">有厂名</el-radio>
+              <el-radio value="bxWuChangMing">无厂名</el-radio>
+            </el-radio-group>
+          </div>
+          <div class="fld">
+            <span class="fld-label">包装</span>
+            <el-radio-group :model-value="packMode.get()" @update:model-value="packMode.set" class="pack-col">
+              <el-radio value="bxZhiBao">纸包</el-radio>
+              <el-radio value="bxZhiXiang">纸箱</el-radio>
+            </el-radio-group>
+          </div>
         </div>
-        <div class="fld">
-          <span class="fld-label">包装</span>
-          <el-radio-group :model-value="packMode.get()" @update:model-value="packMode.set">
-            <el-radio value="bxZhiBao">纸包</el-radio>
-            <el-radio value="bxZhiXiang">纸箱</el-radio>
-          </el-radio-group>
-        </div>
-      </div>
-      <div class="fld">
-        <span class="fld-label">成品规格特殊说明</span>
-        <el-input type="textarea" :rows="2" v-model="f.fkSpecial" />
       </div>
     </el-card>
 
@@ -517,7 +527,7 @@ const packMode = radioPair('bxZhiBao', 'bxZhiXiang');        // 纸包/纸箱
   letter-spacing: 1px;
 }
 
-/* 纸类/发纸数 表格输入 */
+/* 纸类/发纸数 表格输入 —— 对齐原软件编辑态：格内文字有呼吸空间、垂直居中 */
 .paper-table {
   width: 100%;
   border-collapse: collapse;
@@ -525,7 +535,7 @@ const packMode = radioPair('bxZhiBao', 'bxZhiXiang');        // 纸包/纸箱
 }
 .paper-table th, .paper-table td {
   border: 1px solid #cfd8dc;
-  padding: 2px 6px;
+  padding: 4px 8px;
   text-align: center;
   vertical-align: middle;
 }
@@ -534,20 +544,28 @@ const packMode = radioPair('bxZhiBao', 'bxZhiXiang');        // 纸包/纸箱
   color: #37474f;
   font-weight: 700;
   font-size: 12px;
-  padding: 6px;
+  padding: 8px;
+  height: auto;
 }
 .paper-table td {
-  height: 34px;
+  height: 40px;
 }
 .paper-table th:first-child, .paper-table td:first-child { width: 60%; }
+.paper-table :deep(.el-input) {
+  width: 100%;
+  vertical-align: middle;
+}
 .paper-table :deep(.el-input__wrapper) {
   box-shadow: none !important;
   background: transparent !important;
-  padding: 0;
+  padding: 4px 8px !important;
+  min-height: 32px !important;
 }
 .paper-table :deep(.el-input__inner) {
   text-align: left;
-  padding: 0 4px;
+  padding: 0 !important;
+  height: 24px !important;
+  line-height: 24px !important;
 }
 
 /* 机印说明表格：4 列等宽（覆盖 paper-table 首列 60% 规则） */
@@ -566,9 +584,58 @@ const packMode = radioPair('bxZhiBao', 'bxZhiXiang');        // 纸包/纸箱
   gap: 16px;
 }
 
-/* 装订方式：勾选 + 其它输入框（仅输入框，无标签） */
+/* 装订：方式 → 数量公式 → 检查 → 说明 */
 .bind-row { gap: 8px 14px; }
-.bind-other-input { width: 180px; }
+.bind-other-input { width: 140px; }
+.bind-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.bind-qty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.bind-qty-input {
+  flex: 1;
+  min-width: 140px;
+  max-width: 220px;
+}
+.bind-op {
+  flex: none;
+  font-size: 15px;
+  font-weight: 600;
+  color: #78909c;
+  line-height: 1;
+  user-select: none;
+}
+
+/* 成品规格：左规格 / 中说明 / 右包装 */
+.finish-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1.2fr 0.7fr;
+  gap: 14px;
+  align-items: stretch;
+}
+.finish-left { display: flex; flex-direction: column; gap: 10px; }
+.row2-spec { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.finish-note { min-width: 0; }
+.finish-note :deep(.el-textarea__inner) { min-height: 120px; }
+.finish-pack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-left: 1px solid #e3e8ee;
+  padding-left: 12px;
+}
+.pack-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
 
 /* 信息条 */
 .info-row { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }

@@ -63,12 +63,20 @@ function setStatus(msg, type) {
 /* ================= 工具条动作 ================= */
 async function doNewOrder() {
   if (!confirmDiscardDirty()) return;
-  loadOrderInto(await api.newOrder());
-  ensureNewOrderDates(currentOrder);
-  currentFileName.value = currentOrder.meta?.fileName || '';
-  switchView('edit');
-  dirty = false;
-  setStatus('已新建工单', 'ok');
+  try {
+    loadOrderInto(await api.newOrder());
+    ensureNewOrderDates(currentOrder);
+    prepareOrderForSave();
+    const res = await api.saveOrder(currentOrder);
+    currentFileName.value = res.fileName;
+    loadOrderInto(res.order);
+    await refreshOrderList();
+    switchView('edit');
+    dirty = false;
+    setStatus(`已新建工单：${displayOrderNo(currentOrder.orderNo)}`, 'ok');
+  } catch (e) {
+    ElMessage.error('新建失败：' + e);
+  }
 }
 
 /**
@@ -123,11 +131,16 @@ function prepareOrderForSave() {
 
 async function doDuplicateOrder() {
   if (!currentOrder.meta) { ElMessage.warning('当前无工单'); return; }
+  if (!confirmDiscardDirty()) return;
   prepareOrderForSave();
   try {
     const newOrder = await api.duplicateOrder(currentOrder);
     loadOrderInto(newOrder);
-    currentFileName.value = currentOrder.meta?.fileName || '';
+    prepareOrderForSave();
+    const res = await api.saveOrder(currentOrder);
+    currentFileName.value = res.fileName;
+    loadOrderInto(res.order);
+    await refreshOrderList();
     switchView('edit');
     dirty = false;
     setStatus(`已复制为新工单：${displayOrderNo(currentOrder.orderNo)}`, 'ok');
@@ -179,21 +192,21 @@ function confirmDiscardDirty() {
   return window.confirm('当前工单有未保存的修改，确定放弃吗？');
 }
 
-/* ================= 菜单事件 ================= */
+/* ================= 启动：不自动占号；有工单则打开最近一条，否则进列表 ================= */
 onMounted(async () => {
   await refreshOrderList();
-  try {
-    loadOrderInto(await api.newOrder());
-  } catch (e) {
-    loadOrderInto(defaultOrder());
-  }
-  ensureNewOrderDates(currentOrder);
-  currentFileName.value = currentOrder.meta?.fileName || '';
   dirty = false;
-  setStatus('新工单已就绪', 'ok');
+
+  const list = ordersCache.value || [];
+  if (list.length) {
+    await doLoadSelected(list[0].fileName);
+  } else {
+    switchView('list');
+    setStatus('暂无工单，请点击新建', 'ok');
+  }
 
   // 开发调试：URL 带 ?view=preview 自动切到预览（便于 headless 打印验证）
-  if (new URLSearchParams(location.search).get('view') === 'preview') {
+  if (new URLSearchParams(location.search).get('view') === 'preview' && currentFileName.value) {
     await new Promise((r) => setTimeout(r, 100));
     switchView('preview');
   }

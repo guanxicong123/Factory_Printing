@@ -18,7 +18,7 @@ html, body {
 
 /* ============ 真实工单表单样式（源自工单0022379.html，预览/打印用） ============ */
 .form-doc {
-  width: 210mm;
+  width: 198mm;
   margin: 0 auto;
   background: #fff;
   border: 1px solid #000;
@@ -51,11 +51,61 @@ html, body {
 .form-doc .label { background: #fff; font-weight: normal; }
 .form-doc .size-row td { height: 11px; line-height: 1; }
 .form-doc table.inner td { height: 24px; }
-/* 纸类表：行高压缩，保证 A4 单页容纳（5 行纸类） */
+/* 纸类表：左侧表头+5 行；开纸嵌套表，互不抢行 */
 .form-doc table.paper-tbl > tbody > tr > td {
-  height: 17px;
+  height: 20px;
   padding-top: 0;
   padding-bottom: 0;
+}
+.form-doc table.paper-tbl > tbody > tr > td.kai-embed,
+.form-doc table.paper-tbl > tbody > tr > td.paper-note {
+  height: auto;
+  padding: 0;
+  vertical-align: top;
+}
+.form-doc table.paper-tbl > tbody > tr > td.paper-note {
+  padding: 4px 8px;
+  vertical-align: top;
+}
+.form-doc table.paper-tbl .paper-count-hd {
+  white-space: nowrap;
+  font-size: 12px;
+  padding-left: 2px;
+  padding-right: 2px;
+}
+.form-doc table.paper-kai-inner {
+  width: 100%;
+  height: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.form-doc table.paper-kai-inner td {
+  border: 1px solid #000;
+  padding: 0 2px;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 12px;
+}
+.form-doc table.paper-kai-inner tr:first-child > td { border-top: 0; }
+.form-doc table.paper-kai-inner tr:last-child > td { border-bottom: 0; }
+.form-doc table.paper-kai-inner tr > td:first-child { border-left: 0; }
+.form-doc table.paper-kai-inner tr > td:last-child { border-right: 0; }
+.form-doc table.paper-kai-inner .kai-label {
+  width: 22px;
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  letter-spacing: 6px;
+  padding: 4px 0;
+}
+.form-doc table.paper-kai-inner .size-merge {
+  height: 36px;
+  line-height: 1.15;
+  font-size: 11px;
+  padding: 2px 1px;
+}
+.form-doc table.paper-kai-inner .size-cell {
+  height: 18px;
+  font-size: 12px;
 }
 .form-doc [contenteditable] {
   display: inline-block; max-width: 100%;
@@ -90,14 +140,104 @@ html, body {
 }
 .side-tag > div { writing-mode: vertical-rl; text-orientation: upright; letter-spacing: 2px; }
 
+/* 六开/对开：数字紧贴两侧文字，槽位尽量留给数字 */
+.jian-cell {
+  min-height: 24px;
+  height: auto !important;
+  padding: 0 3px;
+  overflow: hidden;
+  white-space: nowrap;
+  line-height: 24px;
+  vertical-align: middle;
+  text-align: left;
+  font-size: 12px;
+  letter-spacing: 0;
+  word-spacing: 0;
+}
+.jian-cell .ck {
+  margin: 0 2px 0 2px;
+  width: 11px;
+  height: 11px;
+}
+.jian-cell .ck.on::after {
+  font-size: 12px;
+}
+.jian-num {
+  display: inline-block;
+  width: 5ch;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  text-overflow: clip;
+  white-space: nowrap;
+  text-align: center;
+  vertical-align: bottom;
+  letter-spacing: 0;
+  word-spacing: 0;
+}
+.jian-num .pv-txt {
+  display: inline;
+}
+.pinban-label {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  letter-spacing: 8px;
+  padding: 10px 2px;
+  height: auto !important;
+  min-height: 72px;
+  overflow: visible !important;
+  white-space: nowrap;
+  vertical-align: middle;
+  line-height: 1.35;
+}
+.pinban-cell {
+  white-space: nowrap;
+  overflow: hidden;
+  padding: 0 !important;
+  font-size: 12px;
+  letter-spacing: 0;
+  word-spacing: 0;
+  height: auto !important;
+}
+.pinban-cell .pinban-line {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.pinban-cell .pinban-line > :first-child,
+.pinban-cell .pinban-line > :last-child {
+  flex: 0 0 auto;
+}
+.pinban-cell .jian-num {
+  flex: 1 1 auto;
+  width: auto !important;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: clip;
+  text-align: center;
+}
+
 .ck {
-  display: inline-block; width: 11px; height: 11px;
+  display: inline-block; width: 13px; height: 13px;
   border: 1px solid #000; margin: 0 2px 0 6px; vertical-align: middle;
   position: relative; background: #fff; cursor: pointer; user-select: none;
 }
 .ck.on::after {
-  content: "V"; position: absolute; inset: 0; line-height: 10px;
-  text-align: center; font-size: 10px; font-weight: bold;
+  content: "✓";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 800;
+  color: #e0321e;
 }
 /* 后工序工艺：选中用大对勾展示 */
 .proc-mark {
@@ -128,42 +268,40 @@ html, body {
 }
 .size-cell { white-space: nowrap; padding: 0 4px; line-height: 1; font-size: 10px; }
 .size-cell .ck { margin: 0 0 0 4px; width: 9px; height: 9px; }
-/* 装订格内勾选框：缩小左边距，让 散张/骑钉 更紧凑一行容纳 */
-.zhuangding .ck { margin: 0 2px 0 2px; }
+/* 装订格：文字在左、勾选在右 */
+.zhuangding .ck { margin: 0 0 0 2px; }
+.zd-check .ck { margin: 0 0 0 4px; }
+/* 装订数量格：数值靠左、单位（张/本/份）靠右 */
+.zd-qty {
+  padding: 2px 6px;
+  white-space: nowrap;
+}
+.zd-qty .zd-val,
+.zd-qty .pv-txt {
+  display: inline;
+}
+.zd-qty .zd-unit {
+  float: right;
+}
+.zd-meiben {
+  text-align: center;
+  vertical-align: middle;
+  padding: 2px 4px;
+}
 .size-cell .ck.on::after { line-height: 8px; font-size: 9px; }
 .size-merge { padding: 0 1px; line-height: 0.9; font-size: 9px; vertical-align: middle; }
-.size-merge .ck { width: 7px; height: 7px; margin: 0 0 0 2px; vertical-align: middle; }
-.size-merge .ck.on::after { line-height: 6px; font-size: 7px; }
+.size-merge .ck {
+  width: 11px;
+  height: 11px;
+  margin: 0 0 0 2px;
+  vertical-align: middle;
+}
+.size-merge .ck.on::after { font-size: 12px; }
 .size-row { height: 13px; }
 .inner { border: 0; }
 .inner td { border: 1px solid #000; }
 .gap-top { margin-top: -1px; }
 .size-cell-left { white-space: normal; padding: 2px 4px; line-height: 1; font-size: 11px; text-align: left; }
-
-/* 装订「每本」合并格：顶部标题居中、下方值+份（份右对齐垂直居中） */
-.meiben-cell {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  height: 100%;
-}
-.meiben-title {
-  display: block;
-  text-align: center;
-  font-weight: normal;
-}
-.meiben-row {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 4px;
-}
-.meiben-val {
-  font-weight: normal;
-}
-.meiben-unit {
-  font-weight: normal;
-}
 
 /* 成品规格行：横 cm 与 竖 cm 两端对齐（flex 包在内部 wrap，td 保持固定行高不撑开） */
 .spec-cell {
@@ -220,10 +358,11 @@ td[data-field]:focus, div[data-field]:focus { outline: 1px dashed #f9a825; backg
     background: #fff !important;
   }
 
+  /* 与预览态一致：固定 198mm，左右留白适配 A4 */
   .form-doc {
-    width: 100% !important;
-    max-width: none !important;
-    margin: 0 !important;
+    width: 198mm !important;
+    max-width: 198mm !important;
+    margin: 0 auto !important;
     border: 1px solid #000 !important;
     padding-right: 4px !important;
     box-shadow: none !important;
@@ -232,5 +371,5 @@ td[data-field]:focus, div[data-field]:focus { outline: 1px dashed #f9a825; backg
   .preview-root .ck { pointer-events: none !important; }
   td[data-field], div[data-field] { outline: none !important; background: transparent !important; }
 
-  @page { size: A4 portrait; margin: 8mm; }
+  @page { size: A4 portrait; margin: 6mm; }
 }

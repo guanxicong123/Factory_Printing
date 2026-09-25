@@ -80,7 +80,7 @@ export function buildWorkOrderDoc(order) {
           <td class="label">产品名称</td>
           <td class="left" colspan="4" style="padding:60px 6px;">${txtarea(['productSpec', 'mProduct_Name'])}</td>
           <td rowspan="2">订印<br>数量</td>
-          <td colspan="3" style="text-align:right; padding-right:8px;">${inp(['orderQty', 'mQty_Job'])} ${inp(['unit', 'mUnit'])}个</td>
+          <td colspan="3" style="text-align:right; padding-right:8px;">${inp(['orderQty', 'mQty_Job'])} ${inp(['unit', 'mUnit'])}</td>
         </tr>
         <tr>
           <td>号码</td>
@@ -92,35 +92,73 @@ export function buildWorkOrderDoc(order) {
 
       <table class="bordered gap-top">
         <tr style="height:auto;">
-          <td style="width:54%; padding:6px; white-space:nowrap; overflow:visible;">
-            <span class="ck ${ck('liukai')}" data-ck="liukai"></span>&nbsp;六开&nbsp;新&nbsp;${inp('xinJian')}&nbsp;件&nbsp;旧&nbsp;${inp('jiuJian')}&nbsp;件&nbsp;共&nbsp;${inp('gongJian')}&nbsp;件&nbsp;已找&nbsp;${inp('yiZhaoJian')}&nbsp;件
+          <td class="jian-cell" style="width:54%;">
+            <span class="ck ${ck('liukai')}" data-ck="liukai"></span> 六开 新<span class="jian-num">${inp('xinJian')}</span>件 旧<span class="jian-num">${inp('jiuJian')}</span>件 共<span class="jian-num">${inp('gongJian')}</span>件 已找<span class="jian-num">${inp('yiZhaoJian')}</span>件
           </td>
-          <td class="label" style="width:5%;" rowspan="2">拼版<br>数量</td>
-          <td style="width:10%;">横&nbsp;${inp('pinbanH')}&nbsp;个</td>
-          <td class="left" style="width:31%; padding:6px 8px; vertical-align:top;" rowspan="2">备注：${txtarea(['remark', 'mRemarks'])}</td>
+          <td class="label pinban-label" style="width:5%;" rowspan="2">拼版数量</td>
+          <td class="pinban-cell" style="width:12%;"><span class="pinban-line"><span>横</span><span class="jian-num">${inp('pinbanH')}</span><span>个</span></span></td>
+          <td class="left" style="width:29%; padding:6px 8px; vertical-align:top;" rowspan="2">备注：${txtarea(['remark', 'mRemarks'])}</td>
         </tr>
         <tr style="height:auto;">
-          <td style="width:54%; padding:6px; white-space:nowrap; overflow:visible;">
-            <span class="ck ${ck('duikai')}" data-ck="duikai"></span>&nbsp;对开&nbsp;新&nbsp;${inp('dkXin')}&nbsp;件&nbsp;旧&nbsp;${inp('dkJiu')}&nbsp;件&nbsp;共&nbsp;${inp('dkGong')}&nbsp;件&nbsp;已找&nbsp;${inp('dkZhao')}&nbsp;件
+          <td class="jian-cell" style="width:54%;">
+            <span class="ck ${ck('duikai')}" data-ck="duikai"></span> 对开 新<span class="jian-num">${inp('dkXin')}</span>件 旧<span class="jian-num">${inp('dkJiu')}</span>件 共<span class="jian-num">${inp('dkGong')}</span>件 已找<span class="jian-num">${inp('dkZhao')}</span>件
           </td>
-          <td style="width:10%;">竖&nbsp;${inp('pinbanS')}&nbsp;个</td>
+          <td class="pinban-cell" style="width:12%;"><span class="pinban-line"><span>竖</span><span class="jian-num">${inp('pinbanS')}</span><span>个</span></span></td>
         </tr>
       </table>
 
       <table class="bordered gap-top paper-tbl">
+        <colgroup>
+          <col style="width:28%;">
+          <col style="width:14%;">
+          <col style="width:24%;">
+          <col style="width:34%;">
+        </colgroup>
         <tr>
-          <td class="label" style="width:30%;">纸类</td>
-          <td class="label" style="width:10%;">发纸数(张)</td>
-          <td rowspan="12" class="label" style="width:7%; writing-mode:vertical-rl; text-orientation:upright; padding:8px 2px;">开 纸</td>
-          <td class="size-merge" rowspan="6" style="width:9%;">
-            1.19 <span class="ck ${ck('sz119a')}" data-ck="sz119a"></span><br>
-            1.09 <span class="ck ${ck('sz109a')}" data-ck="sz109a"></span>
+          <td class="label">纸类</td>
+          <td class="label paper-count-hd">发纸数(张)</td>
+          <td class="kai-embed" rowspan="6">
+            <table class="paper-kai-inner">
+              <tr>
+                <td class="label kai-label" rowspan="6">开 纸</td>
+                <td class="size-merge">
+                  1.19 <span class="ck ${ck('sz119a')}" data-ck="sz119a"></span><br>
+                  1.09 <span class="ck ${ck('sz109a')}" data-ck="sz109a"></span>
+                </td>
+                <td class="size-merge">
+                  0.89 <span class="ck ${ck('sz089a')}" data-ck="sz089a"></span><br>
+                  0.79 <span class="ck ${ck('sz079a')}" data-ck="sz079a"></span>
+                </td>
+              </tr>
+              <tr>
+                <td class="size-cell">${inp('sz47_5')}</td>
+                <td class="size-cell">${inp('sz64_5')}</td>
+              </tr>
+              <tr>
+                <td class="size-cell">开数</td>
+                <td class="size-cell">${inp('kaifangMian')}</td>
+              </tr>
+              <tr>
+                <td class="size-merge">
+                  1.19 <span class="ck ${ck('sz119b')}" data-ck="sz119b"></span><br>
+                  1.09 <span class="ck ${ck('sz109b')}" data-ck="sz109b"></span>
+                </td>
+                <td class="size-merge">
+                  0.89 <span class="ck ${ck('sz089b')}" data-ck="sz089b"></span><br>
+                  0.79 <span class="ck ${ck('sz079b')}" data-ck="sz079b"></span>
+                </td>
+              </tr>
+              <tr>
+                <td class="size-cell">${inp('sz47_3')}</td>
+                <td class="size-cell">${inp('sz64_3')}</td>
+              </tr>
+              <tr>
+                <td class="size-cell">开数</td>
+                <td class="size-cell">${inp('kaifangDi')}</td>
+              </tr>
+            </table>
           </td>
-          <td class="size-merge" rowspan="6" style="width:9%;">
-            0.89 <span class="ck ${ck('sz089a')}" data-ck="sz089a"></span><br>
-            0.79 <span class="ck ${ck('sz079a')}" data-ck="sz079a"></span>
-          </td>
-          <td class="left" style="width:35%; padding:4px 8px; vertical-align:top;" rowspan="12">${txtarea('paperNote')}</td>
+          <td class="left paper-note" rowspan="6">${txtarea('paperNote')}</td>
         </tr>
         <tr>
           <td>${inp('paperType')}</td><td>${inp('paperCount')}</td>
@@ -137,44 +175,16 @@ export function buildWorkOrderDoc(order) {
         <tr>
           <td>${inp('paperType5')}</td><td>${inp('paperCount5')}</td>
         </tr>
-        <tr>
-          <td rowspan="2" class="size-cell-left">${t('paperMian')}</td><td rowspan="2"></td>
-          <td class="size-cell">${inp('sz47_5')}</td><td class="size-cell">${inp('sz64_5')}</td>
-        </tr>
-        <tr>
-          <td class="size-cell">开数</td><td class="size-cell">${inp('kaifangMian')}</td>
-        </tr>
-        <tr>
-          <td></td><td></td>
-          <td class="size-merge" rowspan="2">
-            1.19 <span class="ck ${ck('sz119b')}" data-ck="sz119b"></span><br>
-            1.09 <span class="ck ${ck('sz109b')}" data-ck="sz109b"></span>
-          </td>
-          <td class="size-merge" rowspan="2">
-            0.89 <span class="ck ${ck('sz089b')}" data-ck="sz089b"></span><br>
-            0.79 <span class="ck ${ck('sz079b')}" data-ck="sz079b"></span>
-          </td>
-        </tr>
-        <tr>
-          <td rowspan="2" class="size-cell-left">${t('paperDi')}</td><td rowspan="2"></td>
-        </tr>
-        <tr>
-          <td class="size-cell">${inp('sz47_3')}</td><td class="size-cell">${inp('sz64_3')}</td>
-        </tr>
-        <tr>
-          <td></td><td></td>
-          <td class="size-cell">开数</td><td class="size-cell">${inp('kaifangDi')}</td>
-        </tr>
       </table>
 
       <table class="bordered gap-top">
         <tr>
           <td class="label" style="width:4%;" rowspan="6">机<br>印<br>说<br>明</td>
-          <td class="label" style="width:27%;">纸 别</td>
+          <td class="label" style="width:24%;">纸 别</td>
           <td class="label" style="width:10%;">印 色</td>
-          <td class="label" style="width:10%;">实印数(张)</td>
-          <td class="label" style="width:10%;">放数(张)</td>
-          <td class="label" style="width:35%;">备 注</td>
+          <td class="label" style="width:14%; white-space:nowrap;">实印数(张)</td>
+          <td class="label" style="width:12%; white-space:nowrap;">放数(张)</td>
+          <td class="label" style="width:32%;">备 注</td>
         </tr>
         ${procRows}
       </table>
@@ -219,7 +229,11 @@ export function buildWorkOrderDoc(order) {
         <tr>
           <td style="padding:0;">
             <table class="inner" style="width:100%;">
-              <tr><td style="width:8%;">啤</td><td style="width:10%;">${t('piVersion') === 'old' ? '旧版' : (t('piVersion') === 'new' ? '新版' : '')}</td><td style="width:12%;">特别说明：</td><td style="width:70%;">${inp('houGongxuNote')}</td></tr>
+              <tr>
+                <td style="width:6%;">啤</td>
+                <td style="width:8%;">${t('piVersion') === 'old' ? '旧版' : (t('piVersion') === 'new' ? '新版' : '')}</td>
+                <td class="left" style="width:86%; padding:4px 8px;">特殊说明：${inp('houGongxuNote')}</td>
+              </tr>
             </table>
           </td>
         </tr>
@@ -227,28 +241,32 @@ export function buildWorkOrderDoc(order) {
           <td style="padding:0;">
             <table class="inner" style="width:100%;">
               <tr>
-                <td class="label" style="width:6%;" rowspan="2"><div style="writing-mode:vertical-rl; text-orientation:upright;">装 订</div></td>
-                <td class="left zhuangding" style="width:22%; padding:6px;" rowspan="2">
-                  <span class="ck ${ck('zSanZhang')}" data-ck="zSanZhang"></span>散张&nbsp;
-                  <span class="ck ${ck('zQiDing')}" data-ck="zQiDing"></span>骑钉<br>
-                  <span class="ck ${ck('zSuoXian')}" data-ck="zSuoXian"></span>锁线&nbsp;
-                  <span class="ck ${ck('zJiaoZhuang')}" data-ck="zJiaoZhuang"></span>胶装<br>
-                  其它 <span class="pv-txt underline">${t('zQiTaText')}</span>
+                <td class="label" style="width:6%;" rowspan="2"><div class="v-text">装 订</div></td>
+                <td class="left zhuangding" style="width:22%; padding:4px 6px;" rowspan="2">
+                  散张<span class="ck ${ck('zSanZhang')}" data-ck="zSanZhang"></span>&nbsp;
+                  骑钉<span class="ck ${ck('zQiDing')}" data-ck="zQiDing"></span><br>
+                  锁线<span class="ck ${ck('zSuoXian')}" data-ck="zSuoXian"></span>&nbsp;
+                  胶装<span class="ck ${ck('zJiaoZhuang')}" data-ck="zJiaoZhuang"></span><br>
+                  其它 <span class="pv-txt underline">${escapeHtml(t('zQiTaText'))}</span>
                 </td>
-                <td style="width:12%; padding:0px 6px; text-align:right; padding-right:12px;">张</td>
-                <td style="width:12%; padding:0px 6px; text-align:center; vertical-align:top;">本</td>
-                <td style="width:14%; padding:0px 6px; text-align:center; vertical-align:top;" rowspan="2">每本<br>
-                  <span style="display:block; text-align:right; padding-top:4px;">${inp('zMeiBenFen')} 份</span>
+                <td class="zd-qty" style="width:14%;">
+                  <span class="zd-val">${inp('zZhangCount')}</span>个<span class="zd-unit">张</span>
                 </td>
-                <td class="left" style="width:23%; padding:6px; vertical-align:top;" rowspan="2">特殊说明：<br>${txtarea('zTeshushuoming')}</td>
-                <td style="width:13%; padding:6px;" rowspan="2">检查点数<br>
-                  <span class="ck ${ck('zJinSong')}" data-ck="zJinSong"></span>尽 送<br>
-                  <span class="ck ${ck('zShiSong')}" data-ck="zShiSong"></span>实 送
+                <td class="zd-meiben" style="width:10%;">每本</td>
+                <td class="left" style="width:33%; padding:4px 8px; vertical-align:top;" rowspan="2">特殊说明：${txtarea('zTeshushuoming')}</td>
+                <td class="zd-check" style="width:15%; padding:4px 6px;" rowspan="2">
+                  检查点数<br>
+                  尽送<span class="ck ${ck('zJinSong')}" data-ck="zJinSong"></span><br>
+                  实送<span class="ck ${ck('zShiSong')}" data-ck="zShiSong"></span>
                 </td>
               </tr>
               <tr>
-                <td style="text-align:right; padding-right:12px;">${inp('zZhangCount')}个</td>
-                <td style="text-align:right; padding-right:12px;">${inp('zBenCount')}本</td>
+                <td class="zd-qty">
+                  <span class="zd-val">${inp('zBenCount')}</span><span class="zd-unit">本</span>
+                </td>
+                <td class="zd-qty">
+                  <span class="zd-val">${inp('zMeiBenFen')}</span><span class="zd-unit">份</span>
+                </td>
               </tr>
             </table>
           </td>
@@ -267,22 +285,22 @@ export function buildWorkOrderDoc(order) {
           <td class="left" style="width:28%; padding:6px 8px; vertical-align:top;" rowspan="4">特殊说明：<br>${txtarea('fkSpecial')}</td>
           <td class="label" style="width:8%;" rowspan="4"><div style="writing-mode:vertical-rl; text-orientation:upright;">包 装</div></td>
           <td style="width:16%;" rowspan="2">合格证</td>
-          <td class="left" style="width:16%; padding:4px 6px;"><span class="ck ${ck('bxYouChangMing')}" data-ck="bxYouChangMing"></span>有厂名</td>
+          <td class="left" style="width:16%; padding:4px 6px;">有厂名<span class="ck ${ck('bxYouChangMing')}" data-ck="bxYouChangMing"></span></td>
         </tr>
         <tr>
           <td class="label" rowspan="3">四边留位</td>
           <td>头</td><td>脚</td><td>左</td><td>右</td>
-          <td class="left" style="padding:4px 6px;"><span class="ck ${ck('bxWuChangMing')}" data-ck="bxWuChangMing"></span>无厂名</td>
+          <td class="left" style="padding:4px 6px;">无厂名<span class="ck ${ck('bxWuChangMing')}" data-ck="bxWuChangMing"></span></td>
         </tr>
         <tr>
           <td>${inp('sbTou')}</td><td>${inp('sbJiao')}</td><td>${inp('sbZuo')}</td><td>${inp('sbYou')}</td>
-          <td class="left" style="padding:4px 6px;"><span class="ck ${ck('bxZhiBao')}" data-ck="bxZhiBao"></span>纸包</td>
-          <td></td>
+          <td>纸包</td>
+          <td>${procMark('bxZhiBao')}</td>
         </tr>
         <tr>
           <td></td><td></td><td></td><td></td>
-          <td class="left" style="padding:4px 6px;"><span class="ck ${ck('bxZhiXiang')}" data-ck="bxZhiXiang"></span>纸箱</td>
-          <td></td>
+          <td>纸箱</td>
+          <td>${procMark('bxZhiXiang')}</td>
         </tr>
       </table>
 
