@@ -32,7 +32,7 @@ html, body {
 }
 .form-body {
   flex: 1;
-  padding: 10px 8px 16px 10px;
+  padding: 8px 8px 4px 10px;
   min-width: 0;
 }
 .title-bar { position: relative; text-align: center; margin: 6px 0 10px; height: 40px; }
@@ -51,6 +51,12 @@ html, body {
 .form-doc .label { background: #fff; font-weight: normal; }
 .form-doc .size-row td { height: 11px; line-height: 1; }
 .form-doc table.inner td { height: 24px; }
+/* 纸类表：行高压缩，保证 A4 单页容纳（5 行纸类） */
+.form-doc table.paper-tbl > tbody > tr > td {
+  height: 17px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
 .form-doc [contenteditable] {
   display: inline-block; max-width: 100%;
   word-break: break-all; overflow-wrap: break-word; overflow: hidden;
@@ -74,7 +80,7 @@ html, body {
 .top-info > div { padding: 0 8px; white-space: nowrap; }
 .top-info .right { text-align: right; flex: 1; }
 .bottom-sign {
-  display: flex; border-top: 1px solid #000; margin-top: -1px; font-size: 14px; line-height: 24px;
+  display: flex; border-top: 1px solid #000; margin-top: -1px; font-size: 14px; line-height: 21px;
 }
 .bottom-sign > div { padding: 0 8px; }
 .side-tag {
@@ -92,6 +98,19 @@ html, body {
 .ck.on::after {
   content: "V"; position: absolute; inset: 0; line-height: 10px;
   text-align: center; font-size: 10px; font-weight: bold;
+}
+/* 后工序工艺：选中用大对勾展示 */
+.proc-mark {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-right: 2px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #e0321e;
+  line-height: 1;
+  vertical-align: middle;
+  text-align: center;
 }
 .v-text { writing-mode: vertical-rl; text-orientation: upright; letter-spacing: 2px; padding: 4px 2px; }
 /* 装订"其它"后的下划线（显示其它内容） */
@@ -120,6 +139,31 @@ html, body {
 .inner td { border: 1px solid #000; }
 .gap-top { margin-top: -1px; }
 .size-cell-left { white-space: normal; padding: 2px 4px; line-height: 1; font-size: 11px; text-align: left; }
+
+/* 装订「每本」合并格：顶部标题居中、下方值+份（份右对齐垂直居中） */
+.meiben-cell {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
+.meiben-title {
+  display: block;
+  text-align: center;
+  font-weight: normal;
+}
+.meiben-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 4px;
+}
+.meiben-val {
+  font-weight: normal;
+}
+.meiben-unit {
+  font-weight: normal;
+}
 
 /* 成品规格行：横 cm 与 竖 cm 两端对齐（flex 包在内部 wrap，td 保持固定行高不撑开） */
 .spec-cell {

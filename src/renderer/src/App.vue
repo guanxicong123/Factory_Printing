@@ -12,19 +12,33 @@ import {
 } from './lib/order';
 import EditForm from './components/EditForm.vue';
 import PreviewDoc from './components/PreviewDoc.vue';
+import ListOrders from './components/ListOrders.vue';
 
 // currentOrder 用 reactive：整棵树响应式，子组件 v-model 直接改字段能触发刷新
 const currentOrder = reactive(normalizeOrder(defaultOrder()));
 const currentFileName = ref('');
 const ordersCache = ref([]);
-const currentView = ref('edit'); // 'edit' | 'preview'
+const currentView = ref('edit'); // 'edit' | 'preview' | 'list'
 const statusMsg = ref('就绪');
 let dirty = false;
 
 /* ================= 视图切换 ================= */
 function switchView(view) {
   currentView.value = view;
-  setStatus(view === 'preview' ? '预览模式（只读）' : '编辑模式', 'ok');
+  if (view === 'preview') {
+    setStatus('预览模式（只读）', 'ok');
+  } else if (view === 'list') {
+    setStatus('工单列表', 'ok');
+  } else {
+    setStatus('编辑模式', 'ok');
+  }
+}
+
+/* 进入列表页：先刷新数据源再切换 */
+async function goList() {
+  if (!confirmDiscardDirty()) return;
+  await refreshOrderList();
+  switchView('list');
 }
 
 /* ================= 原地载入新工单（保持引用稳定，避免编辑态绑定失效） ================= */
@@ -57,14 +71,31 @@ async function doNewOrder() {
   setStatus('已新建工单', 'ok');
 }
 
-async function doOpenOrder() {
-  const order = await api.openOrder();
-  if (!order) return;
-  loadOrderInto(order);
-  currentFileName.value = order.meta?.fileName || '';
-  switchView('edit');
-  dirty = false;
-  setStatus(`已打开：${currentFileName.value || '外部文件'}`, 'ok');
+/**
+ * 导入 SQL：选择 MySQL dump（.sql），后端解析 t_job 表数据并落盘为工单。
+ * count = 成功导入条数（0 表示取消或无可导入数据）；skipped = 跳过的数据行数。
+ */
+async function doImportSql() {
+  try {
+    const res = await api.importSql();
+    if (!res || !res.count) {
+      ElMessage.info(res?.message || '未导入任何工单');
+      setStatus(res?.message || '未导入任何工单');
+      return;
+    }
+    await refreshOrderList();
+    const extra = res.skipped ? `，跳过 ${res.skipped} 条` : '';
+    ElMessage.success(res.message || `已导入 ${res.count} 条工单`);
+    setStatus(`导入完成：${res.count} 条${extra}`, 'ok');
+  } catch (e) {
+    ElMessage.error('导入失败：' + e);
+  }
+}
+
+/* 从列表页刷新数据源（复制/删除后同步 sidebar 与列表页） */
+async function requestRefreshList() {
+  await refreshOrderList();
+  setStatus('已刷新列表', 'ok');
 }
 
 async function doSaveOrder() {
@@ -175,7 +206,7 @@ onMounted(async () => {
     <span class="app-title">印刷印件工单</span>
     <div class="toolbar-actions">
       <el-button size="small" @click="doNewOrder">新建</el-button>
-      <el-button size="small" @click="doOpenOrder">打开…</el-button>
+      <el-button size="small" id="btn-open" @click="doImportSql">导入</el-button>
       <el-button size="small" type="primary" @click="doSaveOrder">保存</el-button>
       <el-button size="small" @click="doDuplicateOrder">复制</el-button>
       <el-divider direction="vertical" />
@@ -183,13 +214,15 @@ onMounted(async () => {
       <el-button size="small" @click="switchView('edit')" plain v-else>✏️ 编辑</el-button>
       <el-button size="small" @click="switchView('preview')" plain v-if="currentView!=='preview'">👁 预览</el-button>
       <el-button size="small" type="warning" plain v-else>👁 预览</el-button>
+      <el-button size="small" @click="goList" type="primary" v-if="currentView!=='list'">📋 列表</el-button>
+      <el-button size="small" type="primary" plain v-else>📋 列表</el-button>
       <el-button size="small" type="danger" @click="doPrint">打印</el-button>
     </div>
   </header>
 
   <div class="app-body">
-    <!-- 左侧列表 -->
-    <aside class="app-sidebar">
+    <!-- 左侧列表：列表视图中隐藏，列表页全宽 -->
+    <aside class="app-sidebar" v-if="currentView!=='list'">
       <div class="sidebar-head">
         <span>工单列表</span>
         <el-button size="small" text @click="refreshOrderList; setStatus('已刷新列表','ok')">↻</el-button>
@@ -221,6 +254,14 @@ onMounted(async () => {
       <div v-show="currentView==='preview'" class="preview-scroll">
         <PreviewDoc :order="currentOrder" :key="currentFileName + 'p'" />
       </div>
+      <!-- 列表态：全宽工单列表 -->
+      <ListOrders
+        v-show="currentView==='list'"
+        class="list-scroll"
+        :orders="ordersCache"
+        @open="doLoadSelected"
+        @refresh="requestRefreshList"
+      />
     </section>
   </div>
 
@@ -263,6 +304,7 @@ onMounted(async () => {
 .app-content { flex: 1; min-width: 0; overflow: hidden; display: flex; flex-direction: column; }
 .edit-scroll { flex: 1; overflow: auto; background: #eceff1; padding: 16px 20px; }
 .preview-scroll { flex: 1; overflow: auto; background: #eceff1; padding: 16px 20px; }
+.list-scroll { flex: 1; overflow: auto; background: #fff; padding: 16px 20px; }
 
 .app-statusbar {
   flex-shrink: 0; padding: 5px 14px; font-size: 12px; color: #555;
