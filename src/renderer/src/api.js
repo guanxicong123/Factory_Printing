@@ -53,17 +53,24 @@ function mockApi() {
   }
   function listOrders(opts = {}) {
     const now = ts();
-    const items = [];
+    const kw = String(opts.q || '').trim().toLowerCase();
+    let items = [];
     store.forEach((o, fileName) => {
-      items.push({
+      const f = o.fields || {};
+      const row = {
         id: o.meta.id,
         fileName,
         orderNo: o.orderNo,
-        productName: o.fields.customer || o.fields.productSpec || '',
-        updatedAt: o.meta.updatedAt || now
-      });
+        productName: f.customer || f.productSpec || '',
+        updatedAt: o.meta.updatedAt || now,
+        _search: [
+          o.orderNo, f.customer, f.contractNo, f.productSpec, fileName
+        ].join(' ').toLowerCase()
+      };
+      if (!kw || row._search.includes(kw)) items.push(row);
     });
     items.sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
+    items = items.map(({ _search, ...rest }) => rest);
     const total = items.length;
     const offset = Math.min(opts.offset || 0, total);
     const limit = opts.limit != null ? opts.limit : total - offset;
@@ -121,7 +128,8 @@ export const api = invoke
       listOrders: (opts = {}) =>
         invoke('order_list', {
           limit: opts.limit ?? null,
-          offset: opts.offset ?? null
+          offset: opts.offset ?? null,
+          q: opts.q != null && String(opts.q).trim() !== '' ? String(opts.q).trim() : null
         }),
       loadOrder: (fileName) => invoke('order_load', { fileName }),
       duplicateOrder: (order) => invoke('order_duplicate', { order }),

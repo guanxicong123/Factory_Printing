@@ -2,11 +2,11 @@
 /**
  * 工单列表页：全宽 el-table，服务端分页（与侧栏同源 order_list）。
  *
- * - 按页请求 api.listOrders({ limit, offset })，避免几万条全量进内存
- * - 搜索：在当前已加载页的摘要 + 懒加载扩展字段上过滤（跨全库搜索需后续加后端 q）
+ * - 按页请求 api.listOrders({ limit, offset, q })，避免几万条全量进内存
+ * - 搜索：回车 / 搜索按钮手动触发；后端 q 全库匹配后再分页（有 q 会扫全库，不宜输入即搜）
  * - 复制 / 删除后 emit refresh，由父级刷新侧栏；本页自行再拉当前页
  */
-import { ref, reactive, computed, watch } from 'vue';
+import { ref, reactive, watch } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Search } from '@element-plus/icons-vue';
 import { api } from '../api';
@@ -21,7 +21,7 @@ const emit = defineEmits(['open', 'refresh']);
 const loading = ref(false);
 const keyword = ref('');
 const page = ref(1);
-const pageSize = ref(10);
+const pageSize = ref(20);
 const pageSizes = [10, 20, 50, 100];
 const pageItems = ref([]);
 const total = ref(0);
@@ -45,26 +45,16 @@ async function loadExtra(item) {
   }
 }
 
-function matches(row, kw) {
-  const extra = extraMap.get(row.fileName) || {};
-  const customer = (row.productName || extra.customer || '').toLowerCase();
-  const no = String(row.orderNo || '').toLowerCase();
-  const contract = (extra.contractNo || '').toLowerCase();
-  const spec = (extra.productSpec || '').toLowerCase();
-  return no.includes(kw) || customer.includes(kw) || contract.includes(kw) || spec.includes(kw);
-}
-
-const rows = computed(() => {
-  const kw = keyword.value.trim().toLowerCase();
-  if (!kw) return pageItems.value;
-  return pageItems.value.filter((o) => matches(o, kw));
-});
-
 async function fetchPage() {
   loading.value = true;
   try {
     const offset = (page.value - 1) * pageSize.value;
-    const res = await api.listOrders({ limit: pageSize.value, offset });
+    const q = keyword.value.trim();
+    const res = await api.listOrders({
+      limit: pageSize.value,
+      offset,
+      q: q || undefined
+    });
     pageItems.value = res?.items || [];
     total.value = res?.total ?? pageItems.value.length;
     pageItems.value.forEach((o) => loadExtra(o));
@@ -77,9 +67,14 @@ async function fetchPage() {
   }
 }
 
+/** 手动搜索：回车 / 搜索按钮 / 清空；不做输入即搜，避免大数据量时卡输入 */
+function doSearch() {
+  if (page.value !== 1) page.value = 1;
+  else fetchPage();
+}
+
 watch([page, pageSize], fetchPage, { immediate: true });
 watch(() => props.refreshToken, () => { fetchPage(); });
-watch(keyword, () => { /* 仅过滤当前页，不重置页码 */ });
 
 function cellDate(row) {
   const extra = extraMap.get(row.fileName);
@@ -136,25 +131,29 @@ async function refresh() {
 
 <template>
   <div class="list-orders">
+    <div class="list-search">
+      <el-input
+        v-model="keyword"
+        placeholder="搜索全部：单号 / 客户 / 合同号 / 产品名"
+        clearable
+        size="large"
+        class="search-input"
+        @keyup.enter="doSearch"
+        @clear="doSearch"
+      >
+        <template #prefix><el-icon><Search /></el-icon></template>
+      </el-input>
+      <el-button size="large" type="primary" :loading="loading" @click="doSearch">搜索</el-button>
+      <el-button size="large" :loading="loading" @click="refresh">刷新</el-button>
+    </div>
+
     <div class="list-head">
       <div class="list-title">工单列表（{{ total }} 条）</div>
-      <div class="list-filters">
-        <el-input
-          v-model="keyword"
-          placeholder="搜索本页 单号 / 客户 / 合同号"
-          clearable
-          size="small"
-          class="search-input"
-        >
-          <template #prefix><el-icon><Search /></el-icon></template>
-        </el-input>
-        <el-button size="small" :loading="loading" @click="refresh">刷新</el-button>
-      </div>
     </div>
 
     <el-table
       v-loading="loading"
-      :data="rows"
+      :data="pageItems"
       border
       stripe
       highlight-current-row
@@ -191,7 +190,7 @@ async function refresh() {
         </template>
       </el-table-column>
       <template #empty>
-        <el-empty :description="loading ? '加载中…' : '暂无工单'" :image-size="70" />
+        <el-empty :description="loading ? '加载中…' : (keyword.trim() ? '无匹配工单' : '暂无工单')" :image-size="70" />
       </template>
     </el-table>
 
@@ -211,13 +210,17 @@ async function refresh() {
 
 <style scoped>
 .list-orders { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.list-search {
+  display: flex; align-items: center; gap: 12px;
+  padding: 0 0 14px; flex-shrink: 0;
+}
+.search-input { flex: 1; min-width: 280px; max-width: 640px; }
+.search-input :deep(.el-input__wrapper) { min-height: 44px; font-size: 15px; }
 .list-head {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0 0 12px; gap: 12px; flex-wrap: wrap;
+  padding: 0 0 10px; gap: 12px; flex-wrap: wrap;
 }
 .list-title { font-size: 16px; font-weight: 700; color: #1a237e; }
-.list-filters { display: flex; align-items: center; gap: 8px; }
-.search-input { width: 300px; }
 
 .orders-table { flex: 1; min-height: 0; }
 .orders-table :deep(.cell) { line-height: 1.5; }

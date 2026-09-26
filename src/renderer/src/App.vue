@@ -5,8 +5,9 @@
  *
  * 左侧列表：后端分页拉取 + DOM 虚拟滚动，避免几万条一次性渲染崩溃。
  */
-import { ref, reactive, computed, onMounted, nextTick } from 'vue';
+import { ref, reactive, computed, watch, onMounted, nextTick } from 'vue';
 import { ElMessage } from 'element-plus';
+import { Search } from '@element-plus/icons-vue';
 import { api } from './api';
 import {
   defaultOrder, normalizeOrder, ensureNewOrderDates,
@@ -28,9 +29,11 @@ const currentFileName = ref('');
 const ordersCache = ref([]);
 const ordersTotal = ref(0);
 const listLoading = ref(false);
+const sidebarKeyword = ref('');
 const currentView = ref('edit'); // 'edit' | 'preview' | 'list'
 const statusMsg = ref('就绪');
 let dirty = false;
+let sidebarSearchTimer = null;
 
 /* ---------- 虚拟滚动状态 ---------- */
 const orderListEl = ref(null);
@@ -226,7 +229,12 @@ async function loadMoreOrders(reset = false) {
   listLoading.value = true;
   try {
     const offset = reset ? 0 : ordersCache.value.length;
-    const page = await api.listOrders({ limit: SIDEBAR_PAGE_SIZE, offset });
+    const q = sidebarKeyword.value.trim();
+    const page = await api.listOrders({
+      limit: SIDEBAR_PAGE_SIZE,
+      offset,
+      q: q || undefined
+    });
     const items = page?.items || [];
     ordersTotal.value = page?.total ?? items.length;
     if (reset) {
@@ -248,6 +256,13 @@ async function loadMoreOrders(reset = false) {
   }
   await fillViewportIfNeeded();
 }
+
+watch(sidebarKeyword, () => {
+  if (sidebarSearchTimer) clearTimeout(sidebarSearchTimer);
+  sidebarSearchTimer = setTimeout(() => {
+    loadMoreOrders(true);
+  }, 280);
+});
 
 async function refreshOrderList() {
   await loadMoreOrders(true);
@@ -329,6 +344,17 @@ onMounted(async () => {
         <span>工单列表{{ ordersTotal ? `（${ordersTotal}）` : '' }}</span>
         <el-button size="small" text :loading="listLoading" @click="onSidebarRefresh">↻</el-button>
       </div>
+      <div class="sidebar-search">
+        <el-input
+          v-model="sidebarKeyword"
+          placeholder="搜索全部"
+          clearable
+          size="large"
+          class="sidebar-search-input"
+        >
+          <template #prefix><el-icon><Search /></el-icon></template>
+        </el-input>
+      </div>
       <ul
         v-if="ordersCache.length"
         ref="orderListEl"
@@ -354,7 +380,7 @@ onMounted(async () => {
         <li v-else-if="!listHasMore && ordersCache.length" class="order-empty order-end">已加载全部</li>
       </ul>
       <ul v-else class="order-list">
-        <li class="order-empty">{{ listLoading ? '加载中…' : '（暂无工单）' }}</li>
+        <li class="order-empty">{{ listLoading ? '加载中…' : (sidebarKeyword.trim() ? '无匹配工单' : '（暂无工单）') }}</li>
       </ul>
     </aside>
 
@@ -403,6 +429,10 @@ onMounted(async () => {
   padding: 10px 12px; font-weight: 700; color: #37474f;
   border-bottom: 1px solid #e0e0e0; flex-shrink: 0;
 }
+.sidebar-search {
+  padding: 10px 10px 8px; border-bottom: 1px solid #e0e0e0; flex-shrink: 0;
+}
+.sidebar-search-input :deep(.el-input__wrapper) { min-height: 40px; font-size: 14px; }
 .order-list { list-style: none; flex: 1; overflow-y: auto; padding: 6px 8px; margin: 0; }
 .order-spacer { padding: 0; margin: 0; border: none; list-style: none; pointer-events: none; }
 .order-item {
