@@ -149,9 +149,13 @@ const packMode = radioPair('bxZhiBao', 'bxZhiXiang');        // 纸包/纸箱
     <el-card shadow="never" class="ep-card">
       <template #header><span class="block-title">订印单位</span></template>
       <div class="row2">
-        <div class="fld grow">
+        <div class="fld">
           <span class="fld-label">订印单位</span>
           <el-input v-model="f.customer" placeholder="订印单位" @update:modelValue="(v)=>{f.mCustomer_FullName=v;}" />
+        </div>
+        <div class="fld">
+          <span class="fld-label">成本单价</span>
+          <el-input v-model="f.costUnitPrice" placeholder="成本单价" />
         </div>
         <div class="fld">
           <span class="fld-label">合同号</span>
@@ -646,7 +650,7 @@ const packMode = radioPair('bxZhiBao', 'bxZhiXiang');        // 纸包/纸箱
 .no-val { font-size: 18px; font-weight: 700; color: #1a237e; letter-spacing: 1px; }
 
 /* 行 */
-.row2 { display: grid; grid-template-columns: 1fr 180px; gap: 12px; align-items: start; }
+.row2 { display: grid; grid-template-columns: 1fr 120px 180px; gap: 12px; align-items: start; }
 .row3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; align-items: start; }
 .row4 { display: grid; grid-template-columns: 1fr 120px 1fr; gap: 12px; align-items: start; }
 
