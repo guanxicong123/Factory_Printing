@@ -360,19 +360,17 @@ const packMode = radioPair('bxZhiBao', 'bxZhiXiang');        // 纸包/纸箱
         <span class="fld-label">其它内容</span>
         <el-input v-model="f.gQiTaText" placeholder="其它工序内容" />
       </div>
-      <!-- 啤 / 版本 / 特别说明（对齐预览） -->
-      <div class="beer-row">
-        <div class="fld">
-          <span class="fld-label">啤</span>
-          <el-select v-model="f.piVersion" placeholder="选择啤类型" clearable style="width:120px">
-            <el-option label="新版" value="new" />
-            <el-option label="旧版" value="old" />
-          </el-select>
-        </div>
-        <div class="fld grow">
-          <span class="fld-label">后工序特别说明</span>
-          <el-input v-model="f.houGongxuNote" placeholder="后工序特别说明" />
-        </div>
+      <!-- 啤 / 后工序特别说明（说明单独铺满一行） -->
+      <div class="fld">
+        <span class="fld-label">啤</span>
+        <el-select v-model="f.piVersion" placeholder="选择啤类型" clearable style="width:120px">
+          <el-option label="新版" value="new" />
+          <el-option label="旧版" value="old" />
+        </el-select>
+      </div>
+      <div class="fld">
+        <span class="fld-label">后工序特别说明</span>
+        <el-input v-model="f.houGongxuNote" placeholder="后工序特别说明" />
       </div>
 
       <!-- 装订：方式 / 数量公式行 / 检查 / 说明 分行 -->
@@ -580,13 +578,6 @@ const packMode = radioPair('bxZhiBao', 'bxZhiXiang');        // 纸包/纸箱
 .sb-table { max-width: 420px; }
 .sb-table th, .sb-table td { width: 25% !important; }
 .sb-table th:first-child, .sb-table td:first-child { width: 25% !important; }
-
-/* 啤 / 版本 / 特别说明 行 */
-.beer-row {
-  display: flex;
-  align-items: flex-end;
-  gap: 16px;
-}
 
 /* 装订：方式 → 数量公式 → 检查 → 说明 */
 .bind-row { gap: 8px 14px; }

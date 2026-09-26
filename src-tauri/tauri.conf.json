@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "印刷印件工单",
+  "productName": "印刷工单",
   "version": "0.1.0",
   "identifier": "com.guanxc.factory-printing",
   "build": {
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "印刷印件工单",
+        "title": "印刷工单",
         "width": 1280,
         "height": 860,
         "minWidth": 900,

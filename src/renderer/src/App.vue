@@ -124,7 +124,7 @@ async function doNewOrder() {
 }
 
 /**
- * 导入 SQL：选择 MySQL dump（.sql），后端解析 t_job 表数据并落盘为工单。
+ * 导入 SQL：选择 MySQL dump（.sql），后端解析 t_gd（优先）/ t_job 并落盘为工单。
  * count = 成功导入条数（0 表示取消或无可导入数据）；skipped = 跳过的数据行数。
  */
 async function doImportSql() {
@@ -264,7 +264,10 @@ async function doLoadSelected(fileName) {
     const order = await api.loadOrder(fileName);
     loadOrderInto(order);
     currentFileName.value = fileName;
-    switchView('edit');
+    // 侧栏切换：保持当前编辑/预览态；从列表页打开则进入编辑
+    if (currentView.value === 'list') {
+      switchView('edit');
+    }
     dirty = false;
     setStatus(`已打开：${fileName}`, 'ok');
   } catch (e) {
@@ -302,7 +305,7 @@ onMounted(async () => {
 <template>
   <!-- 工具栏 -->
   <header class="app-toolbar">
-    <span class="app-title">印刷印件工单</span>
+    <span class="app-title">印刷工单</span>
     <div class="toolbar-actions">
       <el-button size="small" @click="doNewOrder">新建</el-button>
       <el-button size="small" id="btn-open" @click="doImportSql">导入</el-button>

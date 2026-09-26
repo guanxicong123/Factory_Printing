@@ -461,13 +461,15 @@ fn order_duplicate(app: tauri::AppHandle, order: Order) -> Result<Order, String>
 
 /* ---------------- SQL 工单导入 ---------------- */
 
-/// 工单主表名（MySQL dump 中的 `t_job`）
+/// 真实工单表（进发旧库 `t_gd`）
+const GD_TABLE: &str = "t_gd";
+/// 兼容旧导入目标（结构不同，字段原样落入 fields）
 const JOB_TABLE: &str = "t_job";
-/// 工单号列名
+const GD_NO_COL: &str = "mGD_No";
 const JOB_NO_COL: &str = "mJob_No";
 
-/// 选择 .sql 文件 → 解析 `t_job` 的 INSERT 数据 → 每条数据落盘为一个工单 JSON。
-/// 已存在同名工单文件时直接覆盖。
+/// 选择 .sql 文件 → 解析 `t_gd`（优先）/ `t_job` → 落盘为工单 JSON。
+/// 已存在同名单号文件时直接覆盖。
 #[tauri::command]
 fn order_import_sql(app: tauri::AppHandle) -> Result<ImportResult, String> {
     use tauri_plugin_dialog::DialogExt;
@@ -478,7 +480,6 @@ fn order_import_sql(app: tauri::AppHandle) -> Result<ImportResult, String> {
         .add_filter("SQL 文件", &["sql"])
         .blocking_pick_file();
     let Some(file) = picked else {
-        // 用户取消：不算错误
         return Ok(ImportResult {
             count: 0,
             skipped: 0,
@@ -489,15 +490,13 @@ fn order_import_sql(app: tauri::AppHandle) -> Result<ImportResult, String> {
     if !path.exists() {
         return Err("文件不存在".into());
     }
-    // 文件可能很大（几十 MB）：整体读入后按字节扫描；非 UTF-8 内容做有损转换，避免直接失败
     let bytes = fs::read(&path).map_err(|e| format!("读取文件失败: {e}"))?;
-    let sql = String::from_utf8_lossy(&bytes).into_owned();
+    let sql = decode_sql_bytes(&bytes);
 
     let now = timestamp_now();
     let dir = orders_dir(&app)?;
     let mut count = 0usize;
     let mut failed = 0usize;
-    // 边解析边落盘：避免大 dump 一次性把所有工单留在内存里
     let skipped = for_each_job_from_sql(&sql, &now, |order| {
         match serde_json::to_string_pretty(&order) {
             Ok(json) => {
@@ -514,7 +513,7 @@ fn order_import_sql(app: tauri::AppHandle) -> Result<ImportResult, String> {
 
     let message = if count == 0 {
         if skipped == 0 {
-            format!("SQL 中未找到 {JOB_TABLE} 工单数据")
+            format!("SQL 中未找到 {GD_TABLE} / {JOB_TABLE} 工单数据")
         } else {
             format!("未导入工单，跳过 {skipped} 条无效数据行")
         }
@@ -530,11 +529,20 @@ fn order_import_sql(app: tauri::AppHandle) -> Result<ImportResult, String> {
     })
 }
 
-/// 扫描 SQL 文本，每解析出一条工单就回调一次；返回跳过的数据行数。
+/// dump 可能是 UTF-8（mysqldump SET NAMES utf8）或 GBK/GB2312 原始库编码
+fn decode_sql_bytes(bytes: &[u8]) -> String {
+    if std::str::from_utf8(bytes).is_ok() {
+        return String::from_utf8_lossy(bytes).into_owned();
+    }
+    let (cow, _, _) = encoding_rs::GBK.decode(bytes);
+    cow.into_owned()
+}
+
+/// 扫描 SQL：优先吃 `t_gd`，兼容 `t_job`；返回跳过的数据行数。
 fn for_each_job_from_sql<F: FnMut(Order)>(sql: &str, now: &str, mut on_job: F) -> usize {
     let bytes = sql.as_bytes();
-    // INSERT 不带列名时的回退：用 CREATE TABLE 的列定义顺序
-    let fallback_cols = create_table_columns(sql, JOB_TABLE);
+    let fallback_gd = create_table_columns(sql, GD_TABLE);
+    let fallback_job = create_table_columns(sql, JOB_TABLE);
 
     let mut skipped = 0usize;
     let mut seen: HashSet<String> = HashSet::new();
@@ -546,18 +554,22 @@ fn for_each_job_from_sql<F: FnMut(Order)>(sql: &str, now: &str, mut on_job: F) -
             pos = start + INS_KW_LEN;
             continue;
         };
-        if !table.eq_ignore_ascii_case(JOB_TABLE) {
-            // 非目标表：只跳到语句末尾，不解析值（大 dump 里可省大量开销）
+        let is_gd = table.eq_ignore_ascii_case(GD_TABLE);
+        let is_job = table.eq_ignore_ascii_case(JOB_TABLE);
+        if !is_gd && !is_job {
             pos = skip_statement(bytes, values_at);
             continue;
         }
         let columns: Vec<String> = if cols.is_empty() {
-            fallback_cols.clone()
+            if is_gd {
+                fallback_gd.clone()
+            } else {
+                fallback_job.clone()
+            }
         } else {
             cols
         };
         if columns.is_empty() {
-            // 没有列名可映射，整条语句作废
             let (tuples, end) = split_value_tuples(bytes, values_at);
             skipped += tuples.len();
             pos = end.max(start + INS_KW_LEN);
@@ -566,9 +578,13 @@ fn for_each_job_from_sql<F: FnMut(Order)>(sql: &str, now: &str, mut on_job: F) -
         let (tuples, end) = split_value_tuples(bytes, values_at);
         pos = end.max(start + INS_KW_LEN);
         for tuple in tuples {
-            match tuple_to_order(&columns, &tuple, now) {
+            let order = if is_gd {
+                gd_tuple_to_order(&columns, &tuple, now)
+            } else {
+                job_tuple_to_order(&columns, &tuple, now)
+            };
+            match order {
                 Some(order) if seen.insert(order.order_no.clone()) => on_job(order),
-                // 同一份 dump 里重复单号：保留首条，其余跳过
                 Some(_) => skipped += 1,
                 None => skipped += 1,
             }
@@ -869,8 +885,247 @@ fn create_table_columns(sql: &str, table: &str) -> Vec<String> {
     cols
 }
 
-/// 一行 SQL 数据 → 工单；无工单号或全空则返回 None
-fn tuple_to_order(columns: &[String], values: &[Option<String>], now: &str) -> Option<Order> {
+/// 一行 `t_gd` 数据 → 工单（列名映射到前端 fields/cks）
+fn gd_tuple_to_order(columns: &[String], values: &[Option<String>], now: &str) -> Option<Order> {
+    let mut raw: HashMap<String, String> = HashMap::new();
+    for (idx, col) in columns.iter().enumerate() {
+        if let Some(Some(v)) = values.get(idx) {
+            if !v.is_empty() {
+                raw.entry(col.clone()).or_insert_with(|| v.clone());
+            }
+        }
+    }
+    if raw.is_empty() {
+        return None;
+    }
+    let order_no = clean_order_no(raw.get(GD_NO_COL).map(|s| s.as_str()).unwrap_or(""));
+    if order_no.is_empty() {
+        return None;
+    }
+
+    let mut fields: HashMap<String, String> = HashMap::new();
+    let mut cks: HashMap<String, bool> = HashMap::new();
+
+    // 文本/日期字段映射（一列可写多个前端别名）
+    for (sql_col, aliases) in GD_TEXT_MAP {
+        let Some(v) = raw.get(*sql_col) else { continue };
+        if *sql_col == "mPrice" && is_zeroish_decimal(v) {
+            continue;
+        }
+        let mapped = if *sql_col == "mGD_Date" || *sql_col == "mGD_D_Date" {
+            sql_datetime_to_cn(v)
+        } else {
+            v.clone()
+        };
+        if mapped.is_empty() {
+            continue;
+        }
+        for alias in *aliases {
+            fields.entry((*alias).to_string()).or_insert_with(|| mapped.clone());
+        }
+    }
+
+    // 勾选：smallint / varchar(√、V、1…)
+    for (sql_col, ck_key) in GD_CK_MAP {
+        if let Some(v) = raw.get(*sql_col) {
+            if is_sql_truthy(v) {
+                cks.insert((*ck_key).to_string(), true);
+            }
+        }
+    }
+
+    // 啤版：mBB → piVersion（有值视为旧版，与表单默认一致）
+    if raw.get("mBB").map(|s| is_sql_truthy(s)).unwrap_or(false) {
+        fields.entry("piVersion".into()).or_insert_with(|| "old".into());
+    }
+
+    // 其它工序：有文案则勾选
+    if fields.get("gQiTaText").map(|s| !s.trim().is_empty()).unwrap_or(false) {
+        cks.insert("gQiTa".into(), true);
+    }
+
+    Some(Order {
+        meta: OrderMeta {
+            id: order_no.clone(),
+            created_at: now.to_string(),
+            updated_at: now.to_string(),
+            file_name: format!("{order_no}.json"),
+        },
+        order_no,
+        fields,
+        cks,
+    })
+}
+
+/// `t_gd` 文本列 → 前端 fields 别名
+const GD_TEXT_MAP: &[(&str, &[&str])] = &[
+    ("mGD_Date", &["openDate", "mJob_Date"]),
+    ("mGD_D_Date", &["deliverDate", "mFinished_Date"]),
+    ("mDYDW", &["customer", "mCustomer_FullName"]),
+    ("mHTH", &["contractNo", "mSales_Confirmation_No"]),
+    ("mPrice", &["costUnitPrice"]),
+    ("mCPMC", &["productSpec", "mProduct_Name"]),
+    ("mHMY", &["numFrom"]),
+    ("mHML", &["numLian"]),
+    ("mDYSL", &["orderQty", "mQty_Job"]),
+    ("mDYSLY", &["numYeBen"]),
+    ("mLKX", &["xinJian"]),
+    ("mLKJ", &["jiuJian"]),
+    ("mLKG", &["gongJian"]),
+    ("mLKZ", &["yiZhaoJian"]),
+    ("mDKX", &["dkXin"]),
+    ("mDKJ", &["dkJiu"]),
+    ("mDKG", &["dkGong"]),
+    ("mDKZ", &["dkZhao"]),
+    ("mPBSLH", &["pinbanH"]),
+    ("mPBSLS", &["pinbanS"]),
+    ("mPBSLB", &["remark", "mRemarks"]),
+    ("mZL1", &["paperType"]),
+    ("mZL2", &["paperType2"]),
+    ("mZL3", &["paperType3"]),
+    ("mZL4", &["paperType4"]),
+    ("mZL5", &["paperType5"]),
+    ("mFZS1", &["paperCount"]),
+    ("mFZS2", &["paperCount2"]),
+    ("mFZS3", &["paperCount3"]),
+    ("mFZS4", &["paperCount4"]),
+    ("mFZS5", &["paperCount5"]),
+    ("mKZ1", &["sz47_5"]),
+    ("mKZ2", &["sz64_5"]),
+    ("mKZ3", &["kaifangMian"]),
+    ("mKZ4", &["sz47_3"]),
+    ("mKZ5", &["sz64_3"]),
+    ("mKZ6", &["kaifangDi"]),
+    ("mZB1", &["print_paper1"]),
+    ("mYS1", &["print_color1"]),
+    ("mSYS1", &["print_qty1"]),
+    ("mFS1", &["print_extra1"]),
+    ("mZB2", &["print_paper2"]),
+    ("mYS2", &["print_color2"]),
+    ("mSYS2", &["print_qty2"]),
+    ("mFS2", &["print_extra2"]),
+    ("mZB3", &["print_paper3"]),
+    ("mYS3", &["print_color3"]),
+    ("mSYS3", &["print_qty3"]),
+    ("mFS3", &["print_extra3"]),
+    ("mZB4", &["print_paper4"]),
+    ("mYS4", &["print_color4"]),
+    ("mSYS4", &["print_qty4"]),
+    ("mFS4", &["print_extra4"]),
+    ("mZB5", &["print_paper5"]),
+    ("mYS5", &["print_color5"]),
+    ("mSYS5", &["print_qty5"]),
+    ("mFS5", &["print_extra5"]),
+    ("mJYSMB", &["print_note"]),
+    ("mBTSSM", &["houGongxuNote"]),
+    ("mQT", &["gQiTaText"]),
+    ("mZDQT", &["zQiTaText"]),
+    ("mZDZ", &["zZhangCount"]),
+    ("mZDB", &["zBenCount"]),
+    ("mZDMB", &["zMeiBenFen"]),
+    ("mZDTSSM", &["zTeshushuoming"]),
+    ("mCPGGH", &["fkHeng"]),
+    ("mCPGGS", &["fkShu"]),
+    ("mCPGGT1", &["sbTou"]),
+    ("mCPGGJ1", &["sbJiao"]),
+    ("mCPGGZ1", &["sbZuo"]),
+    ("mCPGGY1", &["sbYou"]),
+    ("mCPGGT2", &["sbTou2"]),
+    ("mCPGGJ2", &["sbJiao2"]),
+    ("mCPGGZ2", &["sbZuo2"]),
+    ("mCPGGY2", &["sbYou2"]),
+    ("mCPGGTSSM", &["fkSpecial"]),
+    ("mKDR", &["signedBy", "mOperator"]),
+    ("mYWY", &["business"]),
+    ("mYSQDG", &["proofread"]),
+    ("mKZTYB", &["paperNote"]),
+];
+
+/// `t_gd` 勾选列 → cks
+const GD_CK_MAP: &[(&str, &str)] = &[
+    ("mLK", "liukai"),
+    ("mDK", "duikai"),
+    ("mGJD", "gGuangJiaoDan"),
+    ("mGJS", "gGuangJiaoShuang"),
+    ("mYJD", "gYaJiaoDan"),
+    ("mYJS", "gYaJiaoShuang"),
+    ("mMG", "gMoGuang"),
+    ("mXSY", "gXiSuYou"),
+    ("mTJ", "gTangJin"),
+    ("mTY", "gTangYin"),
+    ("mGY", "gGuoYou"),
+    ("mUV", "gUV"),
+    ("mAT", "gAoTu"),
+    ("mYW", "gYaWen"),
+    ("mB", "gPi"),
+    ("mT", "gTie"),
+    ("mBZ", "gBiaoZhi"),
+    ("mBEK", "gZhanKeng"),
+    ("mDKO", "gDaKong"),
+    ("mJY", "gJiYan"),
+    ("mYX", "gYaXian"),
+    ("mBCX", "gPiPiJin"),
+    ("mTPVC", "gTiePVC"),
+    ("mZDSZ", "zSanZhang"),
+    ("mZDQD", "zQiDing"),
+    ("mZDSX", "zSuoXian"),
+    ("mZDJZ", "zJiaoZhuang"),
+    ("mZDJS", "zJinSong"),
+    ("mZDSS", "zShiSong"),
+    ("mCPGGYCM", "bxYouChangMing"),
+    ("mCPGGWCM", "bxWuChangMing"),
+    ("mCPGGZB", "bxZhiBao"),
+    ("mCPGGZX", "bxZhiXiang"),
+    ("mSUZI1", "sz119a"),
+    ("mSUZI2", "sz109a"),
+    ("mSUZI3", "sz089a"),
+    ("mSUZI4", "sz079a"),
+    ("mSUZI5", "sz119b"),
+    ("mSUZI6", "sz109b"),
+    ("mSUZI7", "sz089b"),
+    ("mSUZI8", "sz079b"),
+];
+
+fn is_sql_truthy(v: &str) -> bool {
+    let t = v.trim();
+    if t.is_empty() {
+        return false;
+    }
+    if t == "0" || t.eq_ignore_ascii_case("false") || t.eq_ignore_ascii_case("null") {
+        return false;
+    }
+    true
+}
+
+fn is_zeroish_decimal(v: &str) -> bool {
+    let t = v.trim();
+    if t.is_empty() {
+        return true;
+    }
+    t.parse::<f64>().map(|n| n == 0.0).unwrap_or(false)
+}
+
+/// MySQL datetime / date → 表单中文日期
+fn sql_datetime_to_cn(s: &str) -> String {
+    let t = s.trim();
+    let date_part = t.split_whitespace().next().unwrap_or(t);
+    let parts: Vec<&str> = date_part.split(['-', '/']).collect();
+    if parts.len() >= 3 {
+        if let (Ok(y), Ok(m), Ok(d)) = (
+            parts[0].parse::<u32>(),
+            parts[1].parse::<u32>(),
+            parts[2].parse::<u32>(),
+        ) {
+            if y >= 1000 && (1..=12).contains(&m) && (1..=31).contains(&d) {
+                return format!("{y} 年 {m} 月 {d} 日");
+            }
+        }
+    }
+    t.to_string()
+}
+
+/// 一行 `t_job` 数据 → 工单（字段原样保留，兼容旧 dump）
+fn job_tuple_to_order(columns: &[String], values: &[Option<String>], now: &str) -> Option<Order> {
     let mut fields: HashMap<String, String> = HashMap::new();
     for (idx, col) in columns.iter().enumerate() {
         if let Some(Some(v)) = values.get(idx) {
@@ -1100,6 +1355,30 @@ INSERT INTO `t_job` (`t_Job_ID`, `mJob_No`, `mRemarks`, `mQty_Job`, `mUnit`) VAL
     }
 
     #[test]
+    fn parse_gd_maps_fields_and_checks() {
+        let sql = "\
+INSERT INTO `t_gd` (`mGD_No`,`mGD_Date`,`mGD_D_Date`,`mDYDW`,`mHTH`,`mCPMC`,`mDYSL`,`mLK`,`mB`,`mPrice`,`mKDR`) \
+VALUES ('0000004','2010-08-02 00:00:00','2010-08-06 00:00:00','世亚','PO-1','检测记录表','20本',1,'√','0.0000','萍');
+";
+        let (orders, skipped) = parse(sql);
+        assert_eq!(skipped, 0);
+        assert_eq!(orders.len(), 1);
+        let o = &orders[0];
+        assert_eq!(o.order_no, "0000004");
+        assert_eq!(o.fields.get("customer").unwrap(), "世亚");
+        assert_eq!(o.fields.get("mCustomer_FullName").unwrap(), "世亚");
+        assert_eq!(o.fields.get("productSpec").unwrap(), "检测记录表");
+        assert_eq!(o.fields.get("contractNo").unwrap(), "PO-1");
+        assert_eq!(o.fields.get("orderQty").unwrap(), "20本");
+        assert_eq!(o.fields.get("openDate").unwrap(), "2010 年 8 月 2 日");
+        assert_eq!(o.fields.get("deliverDate").unwrap(), "2010 年 8 月 6 日");
+        assert_eq!(o.fields.get("signedBy").unwrap(), "萍");
+        assert!(!o.fields.contains_key("costUnitPrice"), "零价格应跳过");
+        assert_eq!(o.cks.get("liukai"), Some(&true));
+        assert_eq!(o.cks.get("gPi"), Some(&true));
+    }
+
+    #[test]
     fn parse_without_column_list_uses_create_table() {
         let sql = "\
 CREATE TABLE `t_job` (
@@ -1122,6 +1401,25 @@ INSERT INTO `t_job` VALUES (7,'No. 0022379','2026-09-20','12.50'),(8,'','2026-09
             create_table_columns(sql, JOB_TABLE),
             vec!["t_Job_ID", "mJob_No", "mFinished_Date", "mQty"]
         );
+    }
+
+    #[test]
+    fn parse_gd_without_column_list() {
+        let sql = "\
+CREATE TABLE `t_gd` (
+  `mGD_No` varchar(255) NOT NULL default '',
+  `mDYDW` varchar(255) default NULL,
+  `mCPMC` varchar(255) default NULL,
+  PRIMARY KEY  (`mGD_No`)
+) ENGINE=MyISAM DEFAULT CHARSET=gb2312;
+INSERT INTO `t_gd` VALUES ('0001422','益汇通','标签');
+";
+        let (orders, skipped) = parse(sql);
+        assert_eq!(skipped, 0);
+        assert_eq!(orders.len(), 1);
+        assert_eq!(orders[0].order_no, "0001422");
+        assert_eq!(orders[0].fields.get("customer").unwrap(), "益汇通");
+        assert_eq!(orders[0].fields.get("productSpec").unwrap(), "标签");
     }
 
     #[test]
@@ -1159,8 +1457,8 @@ INSERT INTO `t_job` (`mJob_No`) VALUES ('0002');
         assert_eq!(orders.len(), 1);
         assert_eq!(orders[0].order_no, "0003");
 
-        // 无 t_job 数据
-        let sql = "INSERT INTO `t_gd` VALUES (1,'x');";
+        // 无目标表数据
+        let sql = "INSERT INTO `t_company` VALUES (1,'x');";
         let (orders, skipped) = parse(sql);
         assert!(orders.is_empty() && skipped == 0);
     }
@@ -1171,6 +1469,12 @@ INSERT INTO `t_job` (`mJob_No`) VALUES ('0002');
         assert_eq!(clean_order_no("0022379"), "0022379");
         assert_eq!(clean_order_no("A/B:C*D?E\"F<G>H|I"), "A_B_C_D_E_F_G_H_I");
         assert_eq!(clean_order_no("   "), "");
+    }
+
+    #[test]
+    fn sql_datetime_to_cn_formats() {
+        assert_eq!(sql_datetime_to_cn("2010-08-02 00:00:00"), "2010 年 8 月 2 日");
+        assert_eq!(sql_datetime_to_cn("2010-08-02"), "2010 年 8 月 2 日");
     }
 
     #[test]

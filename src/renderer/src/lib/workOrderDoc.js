@@ -39,7 +39,8 @@ export function buildWorkOrderDoc(order) {
   }
   function txtarea(key) {
     const r = resolveKey(key);
-    const value = getField(f, r.read);
+    // 去掉末尾换行，避免预览格被多撑一行
+    const value = String(getField(f, r.read) ?? '').replace(/\n+$/, '');
     return '<span class="pv-txt multiline">' + escapeHtml(value) + '</span>';
   }
 
@@ -55,7 +56,7 @@ export function buildWorkOrderDoc(order) {
   return `<div class="form-doc">
     <div class="form-body">
 
-      <div class="title-bar"><span class="title">印 刷 印 件 工 单</span></div>
+      <div class="title-bar"><span class="title">印 刷 工 单</span></div>
 
       <div class="top-info">
         <div style="width:40%;"><b>开单日期： ${inp(['openDate', 'mJob_Date'])}</b></div>
@@ -78,7 +79,7 @@ export function buildWorkOrderDoc(order) {
         </colgroup>
         <tr>
           <td class="label">产品名称</td>
-          <td class="left" colspan="4" style="padding:60px 6px;">${txtarea(['productSpec', 'mProduct_Name'])}</td>
+          <td class="left product-name" colspan="4">${txtarea(['productSpec', 'mProduct_Name'])}</td>
           <td rowspan="2">订印<br>数量</td>
           <td colspan="3" style="text-align:right; padding-right:8px;">${inp(['orderQty', 'mQty_Job'])} ${inp(['unit', 'mUnit'])}</td>
         </tr>
