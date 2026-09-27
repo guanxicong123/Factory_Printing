@@ -339,7 +339,8 @@ onMounted(async () => {
 
   <div class="app-body">
     <!-- 左侧列表：列表视图中隐藏，列表页全宽 -->
-    <aside class="app-sidebar" v-if="currentView!=='list'">
+    <!-- 编辑态收起侧栏，腾出一屏宽度；预览态保留侧栏切换工单 -->
+    <aside class="app-sidebar" v-if="currentView==='preview'">
       <div class="sidebar-head">
         <span>工单列表{{ ordersTotal ? `（${ordersTotal}）` : '' }}</span>
         <el-button size="small" text :loading="listLoading" @click="onSidebarRefresh">↻</el-button>
@@ -450,7 +451,10 @@ onMounted(async () => {
 .order-loading, .order-end { padding: 8px 0; }
 
 .app-content { flex: 1; min-width: 0; overflow: hidden; display: flex; flex-direction: column; }
-.edit-scroll { flex: 1; overflow: auto; background: #eceff1; padding: 16px 20px; }
+.edit-scroll {
+  flex: 1; min-height: 0; overflow: auto; background: #e8ecf0;
+  padding: 8px 10px; display: flex; flex-direction: column;
+}
 .preview-scroll { flex: 1; overflow: auto; background: #eceff1; padding: 16px 20px; }
 .list-scroll { flex: 1; overflow: auto; background: #fff; padding: 16px 20px; }
 
