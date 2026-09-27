@@ -18,7 +18,7 @@ export function defaultOrder() {
   return {
     meta: { id: '', createdAt: '', updatedAt: '', fileName: '' },
     orderNo: '',        // 纯数字
-    fields: {},         // 任意 data-field 键值（SQL 对齐名 + 工艺细节）
+    fields: { piVersion: 'old' }, // 啤默认旧版
     cks: {}             // data-ck 勾选框状态 true/false
   };
 }
@@ -36,10 +36,13 @@ export function getField(f, key) {
 
 export function normalizeOrder(order) {
   if (!order) return defaultOrder();
+  const fields = { ...(order.fields || {}) };
+  // 啤版本默认旧版
+  if (!fields.piVersion) fields.piVersion = 'old';
   return {
     meta: order.meta || {},
     orderNo: order.orderNo || '',
-    fields: order.fields || {},
+    fields,
     cks: order.cks || {}
   };
 }

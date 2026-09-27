@@ -61,7 +61,7 @@ export function buildWorkOrderDoc(order) {
       <div class="top-info">
         <div style="width:40%;"><b>开单日期： ${inp(['openDate', 'mJob_Date'])}</b></div>
         <div style="width:42%;"><b>交货日期： ${inp(['deliverDate', 'mFinished_Date'])}</b></div>
-        <div class="right" style="width:18%;"><b style="font-size:17px;">${displayOrderNo(order.orderNo)}</b></div>
+        <div class="right" style="width:18%;"><b style="font-size:19px;">${displayOrderNo(order.orderNo)}</b></div>
       </div>
 
       <table class="bordered gap-top">
@@ -194,11 +194,11 @@ export function buildWorkOrderDoc(order) {
       <table class="bordered gap-top">
         <tr>
           <td class="label" style="width:4%;" rowspan="6">机<br>印<br>说<br>明</td>
-          <td class="label" style="width:20%;">纸 别</td>
-          <td class="label" style="width:9%;">印 色</td>
-          <td class="label" style="width:13%; white-space:nowrap;">实印数(张)</td>
-          <td class="label" style="width:7%; white-space:nowrap;">放数(张)</td>
-          <td class="label" style="width:47%;">备 注</td>
+          <td class="label print-hd" style="width:22%;">纸 别</td>
+          <td class="label print-hd" style="width:9%;">印 色</td>
+          <td class="label print-hd" style="width:12%; white-space:nowrap;">实印数(张)</td>
+          <td class="label print-hd" style="width:9%; white-space:nowrap;">放数(张)</td>
+          <td class="label print-hd" style="width:44%;">备 注</td>
         </tr>
         ${procRows}
       </table>
@@ -235,7 +235,7 @@ export function buildWorkOrderDoc(order) {
               </tr>
               ${(cks.gQiTa && t('gQiTaText')) ? `<tr>
                 <td colspan="19"></td>
-                <td class="left" style="padding:2px 4px; font-size:11px;">${escapeHtml(t('gQiTaText'))}</td>
+                <td class="left" style="padding:2px 4px;"><span class="pv-txt">${escapeHtml(t('gQiTaText'))}</span></td>
               </tr>` : ''}
             </table>
           </td>
@@ -245,7 +245,7 @@ export function buildWorkOrderDoc(order) {
             <table class="inner" style="width:100%;">
               <tr>
                 <td style="width:6%;">啤</td>
-                <td style="width:8%;">${t('piVersion') === 'old' ? '旧版' : (t('piVersion') === 'new' ? '新版' : '')}</td>
+                <td style="width:8%;"><span class="pv-txt">${t('piVersion') === 'old' ? '旧版' : (t('piVersion') === 'new' ? '新版' : '')}</span></td>
                 <td class="left" style="width:86%; padding:4px 8px;">特殊说明：${inp('houGongxuNote')}</td>
               </tr>
             </table>
@@ -267,8 +267,8 @@ export function buildWorkOrderDoc(order) {
                   <span class="zd-val">${inp('zZhangCount')}</span>个<span class="zd-unit">张</span>
                 </td>
                 <td class="zd-meiben" style="width:10%;">每本</td>
-                <td class="left zd-special" style="width:47%; padding:6px 10px; vertical-align:top;" rowspan="2">特殊说明：${txtarea('zTeshushuoming')}</td>
-                <td class="zd-check" style="width:8%; padding:4px 4px; font-size:13px;" rowspan="2">
+                <td class="left zd-special" style="width:45%; padding:6px 10px; vertical-align:top;" rowspan="2">特殊说明：${txtarea('zTeshushuoming')}</td>
+                <td class="zd-check" style="width:10%; padding:4px 4px; font-size:13px;" rowspan="2">
                   检查点数<br>
                   尽送<span class="ck ${ck('zJinSong')}" data-ck="zJinSong"></span><br>
                   实送<span class="ck ${ck('zShiSong')}" data-ck="zShiSong"></span>

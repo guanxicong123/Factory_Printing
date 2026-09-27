@@ -319,7 +319,7 @@ const postCksRest = postCks.filter(
       <div class="post-row2">
         <div class="fld-inline">
           <span class="lbl">啤</span>
-          <el-select size="small" v-model="f.piVersion" placeholder="类型" clearable style="width:90px">
+          <el-select size="small" v-model="f.piVersion" placeholder="旧版" style="width:90px">
             <el-option label="新版" value="new" />
             <el-option label="旧版" value="old" />
           </el-select>

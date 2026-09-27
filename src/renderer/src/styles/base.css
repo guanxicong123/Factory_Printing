@@ -49,6 +49,10 @@ html, body {
 }
 .form-doc .left { text-align: left !important; }
 .form-doc .label { background: #fff; font-weight: normal; }
+/* 编辑态同步到预览的数据字号：相对表单基准 +2 */
+.form-doc .pv-txt {
+  font-size: 17px;
+}
 .form-doc tr.row-tall > td { height: 44px; }
 .form-doc td.customer-cell {
   height: 44px !important;
@@ -83,7 +87,7 @@ html, body {
 .form-doc td.product-name .pv-txt.multiline {
   display: flex;
   align-items: center;
-  min-height: 108px;
+  min-height: 88px;
   line-height: 1.3;
   white-space: pre-wrap;
   word-break: break-word;
@@ -92,6 +96,9 @@ html, body {
 .form-doc .size-row td { height: 11px; line-height: 1; }
 .form-doc tr.print-data-row > td {
   height: 30px;
+}
+.form-doc td.print-hd {
+  padding: 0 !important;
 }
 .form-doc table.inner td { height: 26px; }
 /* 纸类表：左侧表头+5 行；开纸嵌套表随左侧行高对齐 */
