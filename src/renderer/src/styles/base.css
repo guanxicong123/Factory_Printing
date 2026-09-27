@@ -18,7 +18,7 @@ html, body {
 
 /* ============ 真实工单表单样式（源自工单0022379.html，预览/打印用） ============ */
 .form-doc {
-  width: 198mm;
+  width: calc(198mm + 6px);
   margin: 0 auto;
   background: #fff;
   border: 1px solid #000;
@@ -433,10 +433,10 @@ td[data-field]:focus, div[data-field]:focus { outline: 1px dashed #f9a825; backg
     background: #fff !important;
   }
 
-  /* 与预览态一致：固定 198mm，左右留白适配 A4 */
+  /* 与预览态一致：198mm + 6px，左右留白适配 A4 */
   .form-doc {
-    width: 198mm !important;
-    max-width: 198mm !important;
+    width: calc(198mm + 6px) !important;
+    max-width: calc(198mm + 6px) !important;
     margin: 0 auto !important;
     border: 1px solid #000 !important;
     padding-right: 4px !important;
