@@ -1,6 +1,6 @@
 [package]
 name = "factory-printing"
-version = "0.1.0"
+version = "0.1.1"
 description = "进发印刷工单客户端"
 authors = ["guanxc"]
 edition = "2021"
