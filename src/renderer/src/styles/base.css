@@ -48,7 +48,11 @@ html, body {
   height: 26px; overflow: hidden;
 }
 .form-doc .left { text-align: left !important; }
-.form-doc .label { background: #fff; font-weight: normal; }
+.form-doc .label {
+  background: #fff;
+  font-weight: normal;
+  padding: 0 1px !important;
+}
 /* 编辑态同步到预览的数据字号：相对表单基准 +2 */
 .form-doc .pv-txt {
   font-size: 17px;
@@ -158,12 +162,23 @@ html, body {
 .form-doc table.paper-kai-inner .size-merge {
   height: 40px;
   line-height: 1.2;
-  font-size: 12px;
+  font-size: 14px;
   padding: 2px 1px;
+}
+.form-doc table.paper-kai-inner .size-merge .ck {
+  width: 12px;
+  height: 12px;
+  margin: 0 0 0 2px;
+}
+.form-doc table.paper-kai-inner .size-merge .ck.on::after {
+  font-size: 12px;
 }
 .form-doc table.paper-kai-inner .size-cell {
   height: 34px;
   font-size: 13px;
+}
+.form-doc table.paper-kai-inner .kai-shu {
+  font-size: 16px;
 }
 .form-doc [contenteditable] {
   display: inline-block; max-width: 100%;
@@ -183,10 +198,24 @@ html, body {
   white-space: nowrap; text-overflow: ellipsis;
 }
 .top-info {
-  display: flex; border-bottom: 1px solid #000; font-size: 15px; line-height: 28px;
+  display: flex;
+  align-items: baseline;
+  border-bottom: 1px solid #000;
+  font-size: 15px;
+  line-height: 28px;
+  padding-bottom: 2px;
 }
-.top-info > div { padding: 0 8px; white-space: nowrap; }
-.top-info .right { text-align: right; flex: 1; }
+.top-info > div { padding: 0 8px; white-space: nowrap; line-height: 1.2; }
+.top-info .right {
+  text-align: right;
+  flex: 1;
+  line-height: 1;
+}
+.top-info .right b {
+  display: inline-block;
+  line-height: 1;
+  vertical-align: baseline;
+}
 .bottom-sign {
   display: flex; border-top: 1px solid #000; margin-top: -1px; font-size: 15px; line-height: 21px;
 }
@@ -251,12 +280,22 @@ html, body {
 .pinban-cell {
   white-space: nowrap;
   overflow: hidden;
-  padding: 4px 2px !important;
+  padding: 0 !important;
   font-size: 13px;
   letter-spacing: 0;
   word-spacing: 0;
   height: auto !important;
   vertical-align: middle;
+}
+.pinban-cell .pinban-inner {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: stretch;
+  height: 100%;
+  min-height: 78px;
+  padding: 2px;
+  box-sizing: border-box;
 }
 .pinban-cell .pinban-line {
   display: flex;
@@ -265,7 +304,15 @@ html, body {
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
-  min-height: 24px;
+  min-height: 22px;
+  flex: 0 0 auto;
+}
+.pinban-cell .pinban-dash {
+  display: block;
+  width: 100%;
+  border-top: 1px dashed #000;
+  flex: 0 0 auto;
+  margin: 0;
 }
 .pinban-cell .pinban-line > :first-child,
 .pinban-cell .pinban-line > :last-child {
@@ -281,8 +328,9 @@ html, body {
   text-align: center;
 }
 .remark-cell {
-  padding: 6px 10px !important;
-  vertical-align: top;
+  padding: 2px 6px 6px !important;
+  vertical-align: top !important;
+  text-align: left !important;
 }
 .zd-special {
   min-height: 52px;
@@ -290,6 +338,7 @@ html, body {
 .pack-label {
   white-space: nowrap;
   font-size: 15px;
+  padding: 0 1px !important;
 }
 .form-doc tr.pack-row > td,
 .form-doc td.pack-row {
@@ -345,10 +394,23 @@ html, body {
 .size-cell .ck { margin: 0 0 0 4px; width: 9px; height: 9px; }
 /* 装订格：文字在左、勾选在右 */
 .zhuangding .ck { margin: 0 0 0 2px; }
-.zd-check .ck { margin: 0 0 0 4px; }
+.zd-check {
+  padding: 4px 1px !important;
+  vertical-align: middle !important;
+  text-align: left !important;
+  font-size: 12px;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+.zd-check .ck {
+  width: 11px;
+  height: 11px;
+  margin: 0 0 0 1px;
+}
+.zd-check .ck.on::after { font-size: 11px; }
 /* 装订数量格：数值靠左、单位（张/本/份）靠右 */
 .zd-qty {
-  padding: 2px 6px;
+  padding: 2px 4px;
   white-space: nowrap;
 }
 .zd-qty .zd-val,
@@ -364,7 +426,7 @@ html, body {
   padding: 2px 4px;
 }
 .size-cell .ck.on::after { line-height: 8px; font-size: 9px; }
-.size-merge { padding: 0 1px; line-height: 0.9; font-size: 9px; vertical-align: middle; }
+.size-merge { padding: 0 1px; line-height: 0.9; font-size: 12px; vertical-align: middle; }
 .size-merge .ck {
   width: 11px;
   height: 11px;
@@ -378,7 +440,19 @@ html, body {
 .gap-top { margin-top: -1px; }
 .size-cell-left { white-space: normal; padding: 2px 4px; line-height: 1; font-size: 11px; text-align: left; }
 
-/* 成品规格行：横 cm 与 竖 cm 两端对齐（flex 包在内部 wrap，td 保持固定行高不撑开） */
+/* 成品规格 / 包装：竖排侧栏标签完整显示 */
+.spec-side-label,
+.pack-side-label {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  letter-spacing: 6px;
+  padding: 6px 1px !important;
+  overflow: visible !important;
+  white-space: nowrap;
+  vertical-align: middle;
+  line-height: 1.2;
+}
+/* 成品规格行：横 cm 与 竖 cm 同一行不换行 */
 .spec-cell {
   height: 30px;
   padding: 0 !important;
@@ -390,21 +464,22 @@ html, body {
   align-items: stretch;
   width: 100% !important;
   height: 100%;
-  padding: 0 8px;
+  padding: 0 4px;
+  white-space: nowrap;
 }
 .spec-cell .spec-group {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   flex: 1;
   min-width: 0;
   white-space: nowrap;
 }
 .spec-cell .spec-group + .spec-group {
   border-left: 1px dashed #cfd8dc;
-  padding-left: 8px;
-  margin-left: 8px;
+  padding-left: 6px;
+  margin-left: 6px;
 }
 .spec-lbl { font-weight: 600; }
 .spec-val { flex: 1; text-align: center; }

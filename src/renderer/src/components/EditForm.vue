@@ -144,12 +144,14 @@ const postCksRest = postCks.filter(
           <el-input size="small" v-model="f.numFrom" />
         </div>
         <div class="fld-inline w-num-sm">
-          <span class="lbl">联</span>
-          <el-input size="small" v-model="f.numLian" />
+          <el-input size="small" v-model="f.numLian">
+            <template #append>联</template>
+          </el-input>
         </div>
-        <div class="fld-inline w-num-sm">
-          <span class="lbl">页/本</span>
-          <el-input size="small" v-model="f.numYeBen" />
+        <div class="fld-inline w-num-ye">
+          <el-input size="small" v-model="f.numYeBen">
+            <template #append>页/本</template>
+          </el-input>
         </div>
       </div>
       <div class="top-product">
@@ -181,11 +183,15 @@ const postCksRest = postCks.filter(
       <div class="sub-pinban">
         <div class="fld-inline">
           <span class="lbl">拼版横</span>
-          <el-input size="small" v-model="f.pinbanH" />
+          <el-input size="small" v-model="f.pinbanH">
+            <template #append>个</template>
+          </el-input>
         </div>
         <div class="fld-inline">
           <span class="lbl">拼版竖</span>
-          <el-input size="small" v-model="f.pinbanS" />
+          <el-input size="small" v-model="f.pinbanS">
+            <template #append>个</template>
+          </el-input>
         </div>
       </div>
       <div class="sub-remark">
@@ -522,8 +528,14 @@ const postCksRest = postCks.filter(
 .w-contract { width: 130px; }
 .w-qty { width: 100px; }
 .w-unit { width: 72px; }
-.w-num { width: 110px; }
-.w-num-sm { width: 72px; }
+.w-num { width: 180px; }
+.w-num-sm { width: 88px; }
+.w-num-ye { width: 110px; }
+.w-num-sm :deep(.el-input-group__append),
+.w-num-ye :deep(.el-input-group__append) {
+  padding: 0 6px;
+  font-size: 12px;
+}
 
 /* 拼版 */
 .panel-sub {

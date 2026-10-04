@@ -6,11 +6,11 @@
 /* ================= 工单号 ================= */
 export function displayOrderNo(raw) {
   if (!raw) return '';
-  if (/^No\.\s?/i.test(raw)) return raw;
-  return 'No. ' + raw;
+  const bare = String(raw).replace(/^No\.\s*/i, '');
+  return bare ? 'No.' + bare : '';
 }
 export function stripOrderNo(disp) {
-  return String(disp || '').replace(/^No\.\s?/i, '');
+  return String(disp || '').replace(/^No\.\s*/i, '');
 }
 
 /* ================= 空工单 ================= */
