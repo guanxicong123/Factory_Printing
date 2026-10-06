@@ -62,7 +62,7 @@ html, body {
   height: 44px !important;
   white-space: normal !important;
   line-height: 1.35;
-  padding: 4px 8px !important;
+  padding: 4px 0 !important;
   overflow: hidden;
   text-align: left !important;
 }
@@ -81,17 +81,29 @@ html, body {
   letter-spacing: 0;
   line-height: 1.15;
 }
+/* 订印/数量、合同号：上下左右都不要内边距，行距收到字面 */
+.form-doc td.qty-label,
+.form-doc td.contract-label {
+  padding: 0 !important;
+  line-height: 1;
+  letter-spacing: 0;
+}
 /* 产品名称：min-height 对齐原 padding:60px 6px（上下各 60 ≈ 120px），内容垂直居中 */
 .form-doc td.product-name {
   height: auto !important;
-  padding: 6px 8px !important;
+  padding: 6px 0 !important;
   vertical-align: middle;
   overflow: hidden;
+}
+/* 订印单位 / 合同号 / 产品名称 / 订印数量 / 号码：取消左右内边距 */
+.form-doc td.flush-x {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }
 .form-doc td.product-name .pv-txt.multiline {
   display: flex;
   align-items: center;
-  min-height: 88px;
+  min-height: 64px;
   line-height: 1.3;
   white-space: pre-wrap;
   word-break: break-word;

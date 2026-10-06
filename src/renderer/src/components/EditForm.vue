@@ -119,7 +119,7 @@ const postCksRest = postCks.filter(
         </div>
       </div>
       <div class="top-row2">
-        <div class="fld-inline grow">
+        <div class="fld-inline grow flush-x">
           <span class="lbl">订印单位</span>
           <el-input size="small" v-model="f.customer" placeholder="订印单位" @update:modelValue="(v)=>{f.mCustomer_FullName=v;}" />
         </div>
@@ -127,11 +127,11 @@ const postCksRest = postCks.filter(
           <span class="lbl">成本单价</span>
           <el-input size="small" v-model="f.costUnitPrice" />
         </div>
-        <div class="fld-inline w-contract">
+        <div class="fld-inline w-contract flush-x">
           <span class="lbl">合同号</span>
           <el-input size="small" v-model="f.contractNo" />
         </div>
-        <div class="fld-inline w-qty">
+        <div class="fld-inline w-qty flush-x">
           <span class="lbl">订印数量</span>
           <el-input size="small" v-model="f.orderQty" />
         </div>
@@ -139,7 +139,7 @@ const postCksRest = postCks.filter(
           <span class="lbl">单位</span>
           <el-input size="small" v-model="f.unit" />
         </div>
-        <div class="fld-inline w-num">
+        <div class="fld-inline w-num flush-x">
           <span class="lbl">号码由</span>
           <el-input size="small" v-model="f.numFrom" />
         </div>
@@ -154,7 +154,7 @@ const postCksRest = postCks.filter(
           </el-input>
         </div>
       </div>
-      <div class="top-product">
+      <div class="top-product flush-x">
         <span class="lbl">产品名称/规格</span>
         <el-input
           type="textarea"
@@ -512,9 +512,13 @@ const postCksRest = postCks.filter(
 .top-product :deep(.el-textarea) { flex: 1; min-width: 0; }
 .top-product :deep(.el-textarea__inner) {
   min-height: 64px;
-  padding: 4px 8px;
+  padding: 4px 0;
   font-size: 12px;
   line-height: 1.4;
+}
+.flush-x :deep(.el-input__wrapper) {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }
 .no-val {
   font-size: 16px;

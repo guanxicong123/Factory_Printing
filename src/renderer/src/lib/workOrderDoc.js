@@ -66,26 +66,26 @@ export function buildWorkOrderDoc(order) {
 
       <table class="bordered gap-top">
         <tr class="row-tall">
-          <td class="label" style="width:7%;">订印单位</td>
-          <td class="left customer-cell" style="width:63%;">${inp(['customer', 'mCustomer_FullName'])}</td>
-          <td class="label" style="width:8%;">合同号</td>
-          <td style="width:22%;">${inp(['contractNo', 'mSales_Confirmation_No'])}</td>
+          <td class="label flush-x" style="width:5.5%;">订印单位</td>
+          <td class="left customer-cell flush-x" style="width:64.5%;">${inp(['customer', 'mCustomer_FullName'])}</td>
+          <td class="label contract-label" style="width:6.9%;">合同号</td>
+          <td class="flush-x" style="width:23.1%;">${inp(['contractNo', 'mSales_Confirmation_No'])}</td>
         </tr>
       </table>
 
       <table class="bordered gap-top">
         <colgroup>
-          <col style="width:6.5%;"><col style="width:14.5%;"><col style="width:14.5%;"><col style="width:14.5%;"><col style="width:14.5%;"><col style="width:7%;"><col style="width:9.5%;"><col style="width:9.5%;"><col style="width:9.5%;">
+          <col style="width:4.8%;"><col style="width:18.1%;"><col style="width:18.1%;"><col style="width:18.1%;"><col style="width:18.1%;"><col style="width:4.8%;"><col style="width:6%;"><col style="width:6%;"><col style="width:6%;">
         </colgroup>
         <tr>
-          <td class="label narrow-label">产品名称</td>
-          <td class="left product-name" colspan="4">${txtarea(['productSpec', 'mProduct_Name'])}</td>
-          <td class="narrow-label" rowspan="2">订印<br>数量</td>
-          <td colspan="3" style="text-align:right; padding-right:8px;">${inp(['orderQty', 'mQty_Job'])} ${inp(['unit', 'mUnit'])}</td>
+          <td class="label narrow-label flush-x">产品名称</td>
+          <td class="left product-name flush-x" colspan="4">${txtarea(['productSpec', 'mProduct_Name'])}</td>
+          <td class="narrow-label qty-label" rowspan="2">订印<br>数量</td>
+          <td class="flush-x" colspan="3" style="text-align:right;">${inp(['orderQty', 'mQty_Job'])} ${inp(['unit', 'mUnit'])}</td>
         </tr>
         <tr>
-          <td class="narrow-label">号码</td>
-          <td colspan="3" style="text-align:left; padding-left:8px;">由 ${inp('numFrom')}</td>
+          <td class="narrow-label flush-x">号码</td>
+          <td class="flush-x" colspan="3" style="text-align:left;">由 ${inp('numFrom')}</td>
           <td style="text-align:right; padding-right:8px;">${inp('numLian')} 联</td>
           <td colspan="3" style="text-align:right; padding-right:8px;">${inp('numYeBen')} 页/本</td>
         </tr>

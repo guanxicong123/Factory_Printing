@@ -1,6 +1,6 @@
 {
   "name": "factory-printing-form",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "印刷工单客户端",
   "scripts": {
     "dev": "tauri dev",
