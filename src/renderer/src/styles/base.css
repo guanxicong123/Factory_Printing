@@ -123,9 +123,18 @@ html, body {
   padding-top: 0;
   padding-bottom: 0;
 }
+.form-doc table.paper-tbl > tbody > tr:first-child > td:first-child {
+  font-size: 20px;
+}
 .form-doc table.paper-tbl > tbody > tr > td.paper-type-cell {
   height: 36px;
   padding: 3px 6px;
+  font-size: 20px;
+  line-height: 1.2;
+}
+.form-doc table.paper-tbl > tbody > tr > td.paper-type-cell .pv-txt {
+  font-size: 20px;
+  line-height: 1.2;
 }
 .form-doc table.paper-tbl > tbody > tr > td.kai-embed,
 .form-doc table.paper-tbl > tbody > tr > td.paper-note {
@@ -142,7 +151,7 @@ html, body {
 }
 .form-doc table.paper-tbl .paper-count-hd {
   white-space: nowrap;
-  font-size: 11px;
+  font-size: 13px;
   padding-left: 1px;
   padding-right: 1px;
 }
@@ -431,6 +440,13 @@ html, body {
 }
 .zd-qty .zd-unit {
   float: right;
+}
+.form-doc td.zd-qty-zhang {
+  padding-right: 0;
+}
+.form-doc td.zd-qty-zhang .zd-unit {
+  font-size: 13px;
+  line-height: 1;
 }
 .zd-meiben {
   text-align: center;

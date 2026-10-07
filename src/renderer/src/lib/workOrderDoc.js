@@ -126,8 +126,8 @@ export function buildWorkOrderDoc(order) {
 
       <table class="bordered gap-top paper-tbl">
         <colgroup>
-          <col style="width:48%;">
-          <col style="width:8%;">
+          <col style="width:46%;">
+          <col style="width:10%;">
           <col style="width:24%;">
           <col style="width:20%;">
         </colgroup>
@@ -266,7 +266,7 @@ export function buildWorkOrderDoc(order) {
                   胶装<span class="ck ${ck('zJiaoZhuang')}" data-ck="zJiaoZhuang"></span><br>
                   其它 <span class="pv-txt underline">${escapeHtml(t('zQiTaText'))}</span>
                 </td>
-                <td class="zd-qty" style="width:12%;">
+                <td class="zd-qty zd-qty-zhang" style="width:12%;">
                   <span class="zd-val">${inp('zZhangCount')}</span><span class="zd-unit">张/个</span>
                 </td>
                 <td class="zd-meiben" style="width:10%;">每本</td>
